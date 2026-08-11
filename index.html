@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🤖 Бот + US VPN (Always On)</title>
+    <title>🤖 Бот + US VPN</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -24,8 +24,8 @@
             --red: #ff3b30;
             --orange: #ff9500;
             --us-blue: #3c3b6e;
-            --us-red: #b22234;
             --shadow: rgba(0, 0, 0, 0.1);
+            --toast-bg: rgba(0,0,0,0.8);
         }
 
         [data-theme="dark"] {
@@ -36,6 +36,7 @@
             --text-secondary: #8e8e93;
             --border: #38383a;
             --shadow: rgba(0, 0, 0, 0.3);
+            --toast-bg: rgba(255,255,255,0.15);
         }
 
         body {
@@ -46,8 +47,90 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
+        /* ========== УВЕДОМЛЕНИЯ ========== */
+        .notification-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            pointer-events: none;
+            padding: 8px 12px;
+        }
+
+        .notification {
+            background: var(--toast-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(-100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification .notif-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .notification .notif-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .notification .notif-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification .notif-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .notification .notif-text {
+            font-size: 13px;
+            opacity: 0.8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notification .notif-time {
+            font-size: 11px;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+
+        /* ========== ШАПКА ========== */
         .header {
             background: var(--bg-secondary);
             padding: 8px 12px;
@@ -102,6 +185,17 @@
             font-size: 12px;
             flex-shrink: 0;
             overflow: hidden;
+            position: relative;
+        }
+
+        .header .chat-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header .chat-header-avatar .avatar-placeholder {
+            font-size: 14px;
         }
 
         .header .chat-header-text {
@@ -137,9 +231,18 @@
             padding: 4px 6px;
             border-radius: 6px;
             color: var(--text);
+            transition: background 0.2s;
         }
 
-        /* ========== VPN СТАТУС (ВСЕГДА ВКЛЮЧЕН) ========== */
+        .header-actions button:hover {
+            background: var(--border);
+        }
+
+        .header-actions .delete-chat-btn {
+            color: var(--red);
+        }
+
+        /* ========== VPN СТАТУС ========== */
         .vpn-status {
             display: flex;
             align-items: center;
@@ -149,9 +252,14 @@
             border-radius: 12px;
             background: var(--bg);
             border: 1px solid var(--green);
-            cursor: default;
+            cursor: pointer;
             user-select: none;
             animation: vpnPulse 2s infinite;
+            transition: all 0.3s;
+        }
+
+        .vpn-status:hover {
+            transform: scale(1.05);
         }
 
         @keyframes vpnPulse {
@@ -159,11 +267,7 @@
             50% { box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.1); }
         }
 
-        .vpn-status .us-flag {
-            font-size: 14px;
-            line-height: 1;
-        }
-
+        .vpn-status .us-flag { font-size: 14px; line-height: 1; }
         .vpn-status .vpn-dot {
             width: 8px;
             height: 8px;
@@ -177,11 +281,7 @@
             50% { transform: scale(1.4); opacity: 0.7; }
         }
 
-        .vpn-status .vpn-label {
-            color: var(--green);
-            font-weight: 600;
-        }
-
+        .vpn-status .vpn-label { color: var(--green); font-weight: 600; }
         .vpn-status .vpn-server-name {
             font-size: 9px;
             color: var(--text-secondary);
@@ -276,6 +376,7 @@
             transition: background 0.15s;
             gap: 8px;
             border-bottom: 1px solid var(--border);
+            position: relative;
         }
 
         .chat-item:hover {
@@ -286,9 +387,29 @@
             background: var(--bg);
         }
 
+        .chat-item .delete-contact {
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            color: var(--red);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .chat-item:hover .delete-contact {
+            opacity: 1;
+        }
+
+        .chat-item .delete-contact:hover {
+            background: rgba(255, 59, 48, 0.1);
+        }
+
         .chat-avatar {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: var(--blue);
             display: flex;
@@ -299,6 +420,25 @@
             font-size: 14px;
             flex-shrink: 0;
             overflow: hidden;
+            position: relative;
+        }
+
+        .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-avatar .avatar-placeholder {
+            font-size: 16px;
+        }
+
+        .chat-avatar.group {
+            background: var(--green);
+        }
+
+        .chat-avatar.channel {
+            background: var(--orange);
         }
 
         .chat-info {
@@ -365,10 +505,7 @@
             padding: 20px;
         }
 
-        .chat-area-empty .empty-icon {
-            font-size: 40px;
-            margin-bottom: 8px;
-        }
+        .chat-area-empty .empty-icon { font-size: 40px; margin-bottom: 8px; }
 
         .messages-container {
             flex: 1;
@@ -438,6 +575,15 @@
             display: block;
         }
 
+        .message .media-content .video-note {
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .message .media-caption { margin-top: 3px; }
+
         .input-area {
             padding: 6px 10px;
             background: var(--bg-secondary);
@@ -459,9 +605,7 @@
             transition: border-color 0.2s;
         }
 
-        .input-area .input-wrapper:focus-within {
-            border-color: var(--blue);
-        }
+        .input-area .input-wrapper:focus-within { border-color: var(--blue); }
 
         .input-area textarea {
             flex: 1;
@@ -493,6 +637,7 @@
             flex-shrink: 0;
         }
 
+        .input-area .send-btn:active { transform: scale(0.9); }
         .input-area .attach-btn {
             background: none;
             border: none;
@@ -503,6 +648,7 @@
             flex-shrink: 0;
         }
 
+        /* ========== МОДАЛ ========== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -517,9 +663,7 @@
             animation: fadeIn 0.2s ease;
         }
 
-        .modal-overlay.show {
-            display: flex;
-        }
+        .modal-overlay.show { display: flex; }
 
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -542,14 +686,8 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        .modal h3 {
-            margin-bottom: 12px;
-            font-size: 16px;
-        }
-
-        .modal .form-group {
-            margin-bottom: 10px;
-        }
+        .modal h3 { margin-bottom: 12px; font-size: 16px; }
+        .modal .form-group { margin-bottom: 10px; }
 
         .modal .form-group label {
             display: block;
@@ -583,9 +721,7 @@
             font-size: 13px;
         }
 
-        .modal .form-group .file-input input[type="file"] {
-            display: none;
-        }
+        .modal .form-group .file-input input[type="file"] { display: none; }
 
         .modal .btn-modal {
             width: 100%;
@@ -599,16 +735,14 @@
             margin-top: 4px;
         }
 
-        .modal .btn-modal.primary {
-            background: var(--blue);
-            color: white;
-        }
-
+        .modal .btn-modal.primary { background: var(--blue); color: white; }
         .modal .btn-modal.secondary {
             background: var(--bg-secondary);
             color: var(--text);
             margin-top: 4px;
         }
+
+        .modal .btn-modal.danger { background: var(--red); color: white; }
 
         .modal .media-preview {
             margin: 8px 0;
@@ -641,10 +775,7 @@
             font-size: 13px;
         }
 
-        .vpn-server-item:hover {
-            background: var(--bg-secondary);
-        }
-
+        .vpn-server-item:hover { background: var(--bg-secondary); }
         .vpn-server-item.active {
             border-color: var(--green);
             background: rgba(52, 199, 89, 0.1);
@@ -667,6 +798,7 @@
             color: var(--text-secondary);
         }
 
+        /* ========== ТОСТ ========== */
         .toast {
             position: fixed;
             bottom: 16px;
@@ -686,9 +818,7 @@
             max-width: 90%;
         }
 
-        .toast.show {
-            opacity: 1;
-        }
+        .toast.show { opacity: 1; }
 
         .us-badge {
             display: inline-block;
@@ -700,61 +830,55 @@
             margin-left: 4px;
         }
 
-        .vpn-status .connected-text {
-            font-size: 8px;
-            color: var(--green);
-            font-weight: 500;
-        }
-
+        /* ========== АДАПТИВ ========== */
         @media (max-width: 768px) {
             .sidebar {
                 width: 100%;
                 min-width: unset;
                 border-right: none;
             }
-            .sidebar.hidden {
-                display: none;
-            }
-            .chat-area {
-                width: 100%;
-            }
-            .message {
-                max-width: 85%;
-            }
-            .vpn-status .vpn-server-name {
-                max-width: 40px;
-                font-size: 8px;
-            }
-            .vpn-status .vpn-label {
-                font-size: 10px;
-            }
+            .sidebar.hidden { display: none; }
+            .chat-area { width: 100%; }
+            .message { max-width: 85%; }
+            .vpn-status .vpn-server-name { max-width: 40px; font-size: 8px; }
+            .vpn-status .vpn-label { font-size: 10px; }
+            .chat-item .delete-contact { opacity: 1; }
+            .notification { margin: 4px 0; padding: 10px 12px; }
+            .notification .notif-avatar { width: 32px; height: 32px; font-size: 14px; }
         }
 
         @media (min-width: 769px) {
-            .sidebar {
-                display: flex !important;
-            }
+            .sidebar { display: flex !important; }
         }
 
-        ::-webkit-scrollbar {
-            width: 3px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* ========== ЗВУК УВЕДОМЛЕНИЯ ========== */
+        .notification-sound {
+            display: none;
         }
     </style>
 </head>
 <body>
 
+    <!-- ========== УВЕДОМЛЕНИЯ ========== -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- ========== ЗВУК ========== -->
+    <audio class="notification-sound" id="notifSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoAAACBhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqFhYqF">
+    </audio>
+
+    <!-- ========== ШАПКА ========== -->
     <header class="header">
         <div class="header-left">
             <button class="back-btn" id="backBtn" onclick="showChatList()">‹</button>
             <div class="chat-header-info">
-                <div class="chat-header-avatar" id="headerAvatar">🤖</div>
+                <div class="chat-header-avatar" id="headerAvatar">
+                    <span class="avatar-placeholder">🤖</span>
+                </div>
                 <div class="chat-header-text">
                     <div class="title" id="chatTitle">Мой бот</div>
                     <div class="subtitle" id="chatSubtitle">Онлайн: <span id="onlineCount">0</span></div>
@@ -769,11 +893,12 @@
                 <span class="vpn-server-name" id="vpnServerName">Auto</span>
                 <span class="vpn-badge">ON</span>
             </div>
-            <button onclick="forceUpdate()">🔄</button>
-            <button onclick="toggleTheme()">🌓</button>
+            <button onclick="forceUpdate()" title="Обновить">🔄</button>
+            <button onclick="toggleTheme()" title="Тема">🌓</button>
         </div>
     </header>
 
+    <!-- ========== ОСНОВНОЙ КОНТЕЙНЕР ========== -->
     <div class="main-container">
         <div class="sidebar" id="sidebar">
             <div class="sidebar-search">
@@ -805,6 +930,7 @@
         </div>
     </div>
 
+    <!-- ========== ТОСТ ========== -->
     <div class="toast" id="toast"></div>
 
     <!-- ========== МОДАЛ ВЛОЖЕНИЙ ========== -->
@@ -842,21 +968,29 @@
     <div class="modal-overlay" id="vpnModal">
         <div class="modal">
             <h3>🇺🇸 US VPN (Always On)</h3>
-            <div style="font-size:12px;color:var(--green);margin-bottom:8px;text-align:center;">
-                ✅ VPN всегда включен для защиты
-            </div>
+            <div style="font-size:12px;color:var(--green);margin-bottom:8px;text-align:center;">✅ VPN всегда включен</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
                 Текущий сервер: <strong id="currentServerDisplay">Авто</strong>
                 <span class="us-badge">LIVE</span>
             </div>
-            <div class="vpn-server-list" id="vpnServerList">
-                <!-- Сервера генерируются JS -->
-            </div>
+            <div class="vpn-server-list" id="vpnServerList"></div>
             <div style="margin-top:8px;font-size:11px;color:var(--text-secondary);text-align:center;border-top:1px solid var(--border);padding-top:8px;">
-                🇺🇸 Все запросы идут через US сервера<br>
-                🔄 Автоматическая смена при проблемах
+                🇺🇸 Все запросы через US сервера<br>🔄 Авто-смена при проблемах
             </div>
             <button class="btn-modal secondary" onclick="closeModal('vpnModal')">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- ========== МОДАЛ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ ========== -->
+    <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="modal">
+            <h3>⚠️ Удалить контакт</h3>
+            <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">
+                Вы уверены, что хотите удалить <strong id="deleteContactName"></strong> из контактов?
+                <br><small>Сообщения останутся в истории</small>
+            </p>
+            <button class="btn-modal danger" onclick="confirmDeleteContact()">🗑 Удалить</button>
+            <button class="btn-modal secondary" onclick="closeModal('deleteConfirmModal')">Отмена</button>
         </div>
     </div>
 
@@ -865,7 +999,6 @@
         // 1. КОНФИГУРАЦИЯ
         // ============================================================
         const BOT_TOKEN = "8953225877:AAFjsj8bJgMni7EkAM0L2w36xBBRR2tdDv8";
-        const VPN_ALWAYS_ON = true; // VPN всегда включен
 
         // ============================================================
         // 2. US VPN СИСТЕМА (ВСЕГДА ВКЛЮЧЕНА)
@@ -873,9 +1006,7 @@
         let currentServer = null;
         let usServers = [];
         let serverRotationIndex = 0;
-        let isInitialized = false;
 
-        // Реальные US прокси сервера
         const US_PROXIES = [
             { name: '🇺🇸 Нью-Йорк', host: 'us-ny.proxy', port: 8080, ping: 35 },
             { name: '🇺🇸 Лос-Анджелес', host: 'us-la.proxy', port: 8080, ping: 45 },
@@ -887,7 +1018,6 @@
             { name: '🇺🇸 Денвер', host: 'us-den.proxy', port: 8080, ping: 48 },
         ];
 
-        // CORS прокси для обхода ограничений
         const CORS_PROXIES = [
             'https://corsproxy.io/?',
             'https://api.allorigins.win/raw?url=',
@@ -898,7 +1028,6 @@
 
         let currentCorsProxy = 0;
 
-        // Загрузка сохранённых настроек
         function loadVPNSettings() {
             try {
                 const saved = localStorage.getItem('usVpnSettings');
@@ -920,7 +1049,6 @@
             } catch (e) { console.error('Save VPN error:', e); }
         }
 
-        // Получение списка US серверов
         async function fetchUSServers() {
             const sources = [
                 'https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt',
@@ -940,9 +1068,7 @@
                             return parsed;
                         }
                     }
-                } catch (e) {
-                    console.log('Failed to fetch from:', source);
-                }
+                } catch (e) { console.log('Failed to fetch from:', source); }
             }
 
             if (usServers.length === 0) {
@@ -957,11 +1083,9 @@
             return usServers;
         }
 
-        // Парсинг списка прокси
         function parseProxyList(text) {
             const lines = text.split('\n').filter(line => line.trim());
             const servers = [];
-            
             for (const line of lines) {
                 const match = line.match(/(\d+\.\d+\.\d+\.\d+)[:\s]+(\d+)/);
                 if (match) {
@@ -974,15 +1098,12 @@
                 }
                 if (servers.length >= 20) break;
             }
-            
             return servers.length > 0 ? servers : US_PROXIES;
         }
 
-        // Запрос через CORS прокси
         async function fetchWithCORS(url) {
             const proxy = CORS_PROXIES[currentCorsProxy % CORS_PROXIES.length];
             currentCorsProxy++;
-            
             try {
                 const response = await fetch(proxy + encodeURIComponent(url), {
                     headers: { 'Origin': window.location.origin }
@@ -996,28 +1117,21 @@
             }
         }
 
-        // Выбор лучшего сервера (всегда)
         function selectBestServer() {
             if (usServers.length === 0) {
-                fetchUSServers().then(() => {
-                    selectBestServer();
-                });
+                fetchUSServers().then(() => selectBestServer());
                 return;
             }
-
             const sorted = [...usServers].sort((a, b) => (a.ping || 99) - (b.ping || 99));
             currentServer = sorted[0];
             serverRotationIndex = (serverRotationIndex + 1) % usServers.length;
-            
             updateVPNStatus();
             saveVPNSettings();
         }
 
-        // Обновление статуса VPN (всегда ON)
         function updateVPNStatus() {
             const nameEl = document.getElementById('vpnServerName');
             const serverDisplay = document.getElementById('currentServerDisplay');
-            
             if (currentServer) {
                 nameEl.textContent = currentServer.name || 'US';
                 if (serverDisplay) serverDisplay.textContent = currentServer.name || 'Авто';
@@ -1027,13 +1141,10 @@
             }
         }
 
-        // Рендер списка серверов
         function renderVPNServers() {
             const list = document.getElementById('vpnServerList');
             if (!list) return;
-            
             const servers = usServers.length > 0 ? usServers : US_PROXIES;
-            
             list.innerHTML = servers.map((server, i) => `
                 <div class="vpn-server-item ${currentServer && currentServer.host === server.host ? 'active' : ''}" 
                      onclick="selectServer(${i})">
@@ -1045,12 +1156,10 @@
             `).join('');
         }
 
-        // Выбор сервера вручную
         function selectServer(index) {
             const servers = usServers.length > 0 ? usServers : US_PROXIES;
             const server = servers[index];
             if (!server) return;
-            
             currentServer = server;
             saveVPNSettings();
             updateVPNStatus();
@@ -1058,30 +1167,23 @@
             showToast(`✅ Выбран ${server.name}`);
         }
 
-        // Открыть настройки VPN
         function openVPNSettings() {
             document.getElementById('vpnModal').classList.add('show');
             renderVPNServers();
         }
 
         // ============================================================
-        // 3. API С ПОДДЕРЖКОЙ VPN (ВСЕГДА)
+        // 3. API С ПОДДЕРЖКОЙ VPN
         // ============================================================
         async function callTelegramAPI(method, params = {}) {
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/${method}`;
-            
             try {
                 let response;
-                
-                // Всегда используем CORS прокси если есть сервер
                 if (currentServer) {
                     const proxyUrl = CORS_PROXIES[0] + encodeURIComponent(url);
                     response = await fetch(proxyUrl, {
                         method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Origin': window.location.origin
-                        },
+                        headers: { 'Content-Type': 'application/json', 'Origin': window.location.origin },
                         body: JSON.stringify(params)
                     });
                 } else {
@@ -1091,23 +1193,17 @@
                         body: JSON.stringify(params)
                     });
                 }
-                
-                if (!response.ok) {
-                    // Если ошибка, пробуем другой прокси
-                    if (currentServer) {
-                        const proxyUrl = CORS_PROXIES[1] + encodeURIComponent(url);
-                        response = await fetch(proxyUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(params)
-                        });
-                    }
+                if (!response.ok && currentServer) {
+                    const proxyUrl = CORS_PROXIES[1] + encodeURIComponent(url);
+                    response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(params)
+                    });
                 }
-                
                 return await response.json();
             } catch (error) {
                 console.error('API Error:', error);
-                // Если с прокси ошибка, пробуем без него
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
@@ -1122,7 +1218,7 @@
         }
 
         // ============================================================
-        // 4. ОСТАЛЬНАЯ ЛОГИКА БОТА (СОКРАЩЕНА)
+        // 4. БОТ
         // ============================================================
         let contacts = [];
         let messages = {};
@@ -1131,60 +1227,157 @@
         let lastUpdateId = 0;
         let updateInterval = null;
         let selectedFile = null;
+        let chatAvatars = {};
+        let contactToDelete = null;
 
-        function loadData() {
+        // ============================================================
+        // 5. УВЕДОМЛЕНИЯ
+        // ============================================================
+        let notificationSound = null;
+
+        function initSound() {
             try {
-                const savedContacts = localStorage.getItem('botContacts');
-                const savedMessages = localStorage.getItem('botMessages');
-                const savedLastUpdate = localStorage.getItem('botLastUpdate');
-                if (savedContacts) contacts = JSON.parse(savedContacts);
-                if (savedMessages) messages = JSON.parse(savedMessages);
-                if (savedLastUpdate) lastUpdateId = parseInt(savedLastUpdate) || 0;
-            } catch (e) { console.error('Load error:', e); }
-        }
-
-        function saveData() {
-            try {
-                localStorage.setItem('botContacts', JSON.stringify(contacts));
-                localStorage.setItem('botMessages', JSON.stringify(messages));
-                localStorage.setItem('botLastUpdate', String(lastUpdateId));
-            } catch (e) { console.error('Save error:', e); }
-        }
-
-        async function getUpdates() {
-            try {
-                const params = { timeout: 30, allowed_updates: ['message', 'channel_post'] };
-                if (lastUpdateId > 0) params.offset = lastUpdateId + 1;
-
-                const result = await callTelegramAPI('getUpdates', params);
-                
-                if (result.ok && result.result) {
-                    for (const update of result.result) {
-                        lastUpdateId = Math.max(lastUpdateId, update.update_id);
-                        const msg = update.message || update.channel_post;
-                        if (msg) await processNewMessage(msg);
+                notificationSound = document.getElementById('notifSound');
+                if (notificationSound) {
+                    // Создаём простой звук через Web Audio API если файл не загрузился
+                    if (!notificationSound.readyState || notificationSound.readyState === 0) {
+                        createFallbackSound();
                     }
-                    if (result.result.length > 0) {
-                        renderChats();
-                        updateOnlineCount();
-                        if (currentChat) renderMessages(currentChat.id);
+                } else {
+                    createFallbackSound();
+                }
+            } catch (e) { console.log('Sound init error:', e); }
+        }
+
+        function createFallbackSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.frequency.value = 800;
+                gainNode.gain.value = 0.1;
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, 150);
+            } catch (e) { console.log('Fallback sound error:', e); }
+        }
+
+        function playNotificationSound() {
+            try {
+                if (notificationSound) {
+                    notificationSound.currentTime = 0;
+                    notificationSound.volume = 0.3;
+                    notificationSound.play().catch(() => createFallbackSound());
+                } else {
+                    createFallbackSound();
+                }
+            } catch (e) { console.log('Play sound error:', e); }
+        }
+
+        function showNotification(name, text, avatar, chatId) {
+            const container = document.getElementById('notificationContainer');
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            
+            const avatarHtml = avatar ? 
+                `<img src="${avatar}" alt="${name}">` : 
+                `<span style="font-size:18px;">${name ? name[0].toUpperCase() : '?'}</span>`;
+            
+            notif.innerHTML = `
+                <div class="notif-avatar">${avatarHtml}</div>
+                <div class="notif-content">
+                    <div class="notif-name">${name}</div>
+                    <div class="notif-text">${text}</div>
+                </div>
+                <div class="notif-time">${new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}</div>
+            `;
+            
+            notif.onclick = () => {
+                const chat = contacts.find(c => c.id === chatId);
+                if (chat) {
+                    openChat(chatId);
+                    if (window.innerWidth <= 768) {
+                        document.getElementById('sidebar').classList.add('hidden');
+                        document.getElementById('backBtn').classList.add('show');
                     }
                 }
+                notif.remove();
+            };
+            
+            container.appendChild(notif);
+            
+            // Анимация
+            setTimeout(() => notif.classList.add('show'), 10);
+            
+            // Звук
+            playNotificationSound();
+            
+            // Авто-удаление
+            setTimeout(() => {
+                notif.classList.remove('show');
+                setTimeout(() => notif.remove(), 400);
+            }, 5000);
+        }
+
+        // ============================================================
+        // 6. ЗАГРУЗКА АВАТАР
+        // ============================================================
+        async function loadUserAvatar(userId) {
+            try {
+                const photos = await callTelegramAPI('getUserProfilePhotos', { user_id: userId, limit: 1 });
+                if (photos.ok && photos.result?.total_count > 0) {
+                    const fileId = photos.result.photos[0][0].file_id;
+                    const file = await callTelegramAPI('getFile', { file_id: fileId });
+                    if (file.ok) {
+                        const avatarUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${file.result.file_path}`;
+                        chatAvatars[String(userId)] = avatarUrl;
+                        return avatarUrl;
+                    }
+                }
+                return null;
             } catch (e) {
-                console.error('Get updates error:', e);
+                console.error('Avatar load error:', e);
+                return null;
             }
         }
 
+        function getAvatarForContact(chat) {
+            if (chat.avatar) return chat.avatar;
+            if (chat.id && chatAvatars[chat.id]) return chatAvatars[chat.id];
+            return null;
+        }
+
+        // ============================================================
+        // 7. ОБРАБОТКА НОВЫХ СООБЩЕНИЙ
+        // ============================================================
         async function processNewMessage(msg) {
             const chatId = String(msg.chat.id);
             const chatType = msg.chat.type;
             
             let userName = '';
+            let userId = null;
+            
             if (chatType === 'private') {
                 userName = msg.from?.first_name || msg.from?.username || 'User';
                 if (msg.from?.last_name) userName += ' ' + msg.from.last_name;
+                userId = msg.from?.id;
             } else {
                 userName = msg.chat.title || msg.from?.first_name || 'Chat';
+                userId = msg.chat.id;
+            }
+
+            // Загружаем аватар
+            let avatarUrl = null;
+            if (userId) {
+                if (chatAvatars[String(userId)]) {
+                    avatarUrl = chatAvatars[String(userId)];
+                } else {
+                    avatarUrl = await loadUserAvatar(userId);
+                }
             }
 
             let mediaType = null;
@@ -1213,6 +1406,10 @@
                 text = msg.caption || `📄 ${msg.document.file_name || 'Документ'}`;
             }
 
+            // Проверяем, есть ли контакт
+            const existing = contacts.find(c => c.id === chatId);
+            const isNewContact = !existing;
+            
             const contact = {
                 id: chatId,
                 type: chatType === 'private' ? 'user' : 
@@ -1221,20 +1418,28 @@
                 last: text || 'Сообщение',
                 time: new Date(msg.date * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
                 unread: currentChat?.id !== chatId ? 1 : 0,
-                date: msg.date
+                date: msg.date,
+                avatar: avatarUrl,
+                userId: userId
             };
 
-            const existing = contacts.find(c => c.id === contact.id);
             if (existing) {
                 existing.last = contact.last;
                 existing.time = contact.time;
-                if (currentChat?.id !== chatId) existing.unread = (existing.unread || 0) + 1;
+                if (currentChat?.id !== chatId) {
+                    existing.unread = (existing.unread || 0) + 1;
+                }
                 existing.date = contact.date;
+                if (avatarUrl) existing.avatar = avatarUrl;
+                if (userId) existing.userId = userId;
             } else {
                 contacts.unshift(contact);
-                showToast(`🆕 Новый контакт: ${contact.name}`);
+                if (chatType === 'private') {
+                    showToast(`🆕 Новый контакт: ${contact.name}`);
+                }
             }
 
+            // Сохраняем сообщение
             if (!messages[chatId]) messages[chatId] = [];
             
             const messageObj = {
@@ -1245,17 +1450,123 @@
                 time: contact.time,
                 date: msg.date,
                 mediaType: mediaType,
-                mediaFileId: mediaFileId
+                mediaFileId: mediaFileId,
+                sender_id: userId
             };
 
             const exists = messages[chatId].find(m => m.id === messageObj.id);
             if (!exists) {
                 messages[chatId].push(messageObj);
                 if (messages[chatId].length > 200) messages[chatId].shift();
+                
+                // УВЕДОМЛЕНИЕ
+                if (chatType === 'private' && currentChat?.id !== chatId) {
+                    const preview = text.length > 50 ? text.slice(0, 50) + '...' : text;
+                    showNotification(contact.name, preview, contact.avatar, chatId);
+                }
             }
 
             saveData();
-            if (currentChat && currentChat.id === chatId) renderMessages(chatId);
+            renderChats();
+            updateOnlineCount();
+            
+            if (currentChat && currentChat.id === chatId) {
+                renderMessages(chatId);
+            }
+        }
+
+        // ============================================================
+        // 8. УДАЛЕНИЕ КОНТАКТОВ
+        // ============================================================
+        function deleteContact(chatId) {
+            const contact = contacts.find(c => c.id === chatId);
+            if (!contact) return;
+            
+            contactToDelete = chatId;
+            document.getElementById('deleteContactName').textContent = contact.name;
+            document.getElementById('deleteConfirmModal').classList.add('show');
+        }
+
+        function confirmDeleteContact() {
+            if (!contactToDelete) return;
+            
+            const index = contacts.findIndex(c => c.id === contactToDelete);
+            if (index !== -1) {
+                const deleted = contacts[index];
+                contacts.splice(index, 1);
+                
+                // Удаляем сообщения (опционально)
+                // delete messages[contactToDelete];
+                
+                saveData();
+                renderChats();
+                
+                // Если удалённый чат был открыт
+                if (currentChat && currentChat.id === contactToDelete) {
+                    currentChat = null;
+                    document.getElementById('emptyState').style.display = 'flex';
+                    document.getElementById('messagesContainer').style.display = 'none';
+                    document.getElementById('inputArea').style.display = 'none';
+                    document.getElementById('chatTitle').textContent = 'Мой бот';
+                    document.getElementById('chatSubtitle').textContent = 'Выберите чат';
+                    document.getElementById('headerAvatar').innerHTML = '<span class="avatar-placeholder">🤖</span>';
+                }
+                
+                showToast(`🗑 Удалён: ${deleted.name}`);
+            }
+            
+            closeModal('deleteConfirmModal');
+            contactToDelete = null;
+        }
+
+        // ============================================================
+        // 9. ОСТАЛЬНАЯ ЛОГИКА
+        // ============================================================
+        function loadData() {
+            try {
+                const savedContacts = localStorage.getItem('botContacts');
+                const savedMessages = localStorage.getItem('botMessages');
+                const savedLastUpdate = localStorage.getItem('botLastUpdate');
+                const savedAvatars = localStorage.getItem('chatAvatars');
+                
+                if (savedContacts) contacts = JSON.parse(savedContacts);
+                if (savedMessages) messages = JSON.parse(savedMessages);
+                if (savedLastUpdate) lastUpdateId = parseInt(savedLastUpdate) || 0;
+                if (savedAvatars) chatAvatars = JSON.parse(savedAvatars);
+            } catch (e) { console.error('Load error:', e); }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('botContacts', JSON.stringify(contacts));
+                localStorage.setItem('botMessages', JSON.stringify(messages));
+                localStorage.setItem('botLastUpdate', String(lastUpdateId));
+                localStorage.setItem('chatAvatars', JSON.stringify(chatAvatars));
+            } catch (e) { console.error('Save error:', e); }
+        }
+
+        async function getUpdates() {
+            try {
+                const params = { timeout: 30, allowed_updates: ['message', 'channel_post'] };
+                if (lastUpdateId > 0) params.offset = lastUpdateId + 1;
+
+                const result = await callTelegramAPI('getUpdates', params);
+                
+                if (result.ok && result.result) {
+                    for (const update of result.result) {
+                        lastUpdateId = Math.max(lastUpdateId, update.update_id);
+                        const msg = update.message || update.channel_post;
+                        if (msg) await processNewMessage(msg);
+                    }
+                    if (result.result.length > 0) {
+                        renderChats();
+                        updateOnlineCount();
+                        if (currentChat) renderMessages(currentChat.id);
+                    }
+                }
+            } catch (e) {
+                console.error('Get updates error:', e);
+            }
         }
 
         function renderChats() {
@@ -1293,13 +1604,16 @@
                 const isActive = currentChat && currentChat.id === chat.id;
                 const typeEmoji = chat.type === 'group' ? '👥' : chat.type === 'channel' ? '📢' : '';
                 const unread = chat.unread || 0;
+                const avatar = chat.avatar || '';
+                const initial = chat.name ? chat.name[0].toUpperCase() : '?';
                 
                 return `
-                    <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${chat.id}')">
-                        <div class="chat-avatar ${chat.type === 'group' ? 'group' : chat.type === 'channel' ? 'channel' : ''}">
-                            ${chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : typeEmoji}
+                    <div class="chat-item ${isActive ? 'active' : ''}">
+                        <div class="chat-avatar ${chat.type === 'group' ? 'group' : chat.type === 'channel' ? 'channel' : ''}" onclick="openChat('${chat.id}')">
+                            ${avatar ? `<img src="${avatar}" alt="${chat.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'avatar-placeholder\\'>${initial}</span>'">` : 
+                              `<span class="avatar-placeholder">${chat.type === 'user' ? initial : typeEmoji}</span>`}
                         </div>
-                        <div class="chat-info">
+                        <div class="chat-info" onclick="openChat('${chat.id}')">
                             <div class="chat-name">${chat.name}</div>
                             <div class="chat-last">${chat.last || 'Новое сообщение'}</div>
                         </div>
@@ -1307,6 +1621,7 @@
                             <div class="chat-time">${chat.time || ''}</div>
                             ${unread > 0 ? `<div class="chat-badge">${unread}</div>` : ''}
                         </div>
+                        <button class="delete-contact" onclick="event.stopPropagation();deleteContact('${chat.id}')" title="Удалить контакт">✕</button>
                     </div>
                 `;
             }).join('');
@@ -1333,8 +1648,16 @@
             document.getElementById('chatSubtitle').textContent = typeMap[chat.type] || 'Чат';
             
             const headerAvatar = document.getElementById('headerAvatar');
-            headerAvatar.textContent = chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : 
-                                      (chat.type === 'group' ? '👥' : '📢');
+            const avatar = chat.avatar || '';
+            const initial = chat.name ? chat.name[0].toUpperCase() : '?';
+            
+            if (avatar) {
+                headerAvatar.innerHTML = `<img src="${avatar}" alt="${chat.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'avatar-placeholder\\'>${initial}</span>'">`;
+            } else {
+                headerAvatar.innerHTML = `<span class="avatar-placeholder">${chat.type === 'user' ? initial : (chat.type === 'group' ? '👥' : '📢')}</span>`;
+                headerAvatar.style.background = chat.type === 'group' ? 'var(--green)' : 
+                                               chat.type === 'channel' ? 'var(--orange)' : 'var(--blue)';
+            }
 
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('messagesContainer').style.display = 'flex';
@@ -1463,6 +1786,9 @@
             }
         }
 
+        // ============================================================
+        // 10. ОТПРАВКА МЕДИА
+        // ============================================================
         function openAttachModal() {
             if (!currentChat) { showToast('⚠️ Сначала выберите чат'); return; }
             document.getElementById('attachModal').classList.add('show');
@@ -1617,6 +1943,9 @@
             selectedFile = null;
         }
 
+        // ============================================================
+        // 11. ОБНОВЛЕНИЕ
+        // ============================================================
         async function forceUpdate() {
             showToast('🔄 Обновление...');
             await getUpdates();
@@ -1630,6 +1959,9 @@
             document.getElementById('onlineCount').textContent = contacts.filter(c => c.type === 'user').length;
         }
 
+        // ============================================================
+        // 12. ВСПОМОГАТЕЛЬНЫЕ
+        // ============================================================
         function showToast(text) {
             const toast = document.getElementById('toast');
             toast.textContent = text;
@@ -1668,26 +2000,25 @@
         }
 
         // ============================================================
-        // 5. ИНИЦИАЛИЗАЦИЯ
+        // 13. ИНИЦИАЛИЗАЦИЯ
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
-            // Загрузка темы
+            // Тема
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 document.documentElement.setAttribute('data-theme', savedTheme);
             }
 
-            // Загрузка данных
+            // Звук
+            initSound();
+
+            // Данные
             loadData();
             loadVPNSettings();
             
-            // Загрузка US серверов
+            // VPN
             await fetchUSServers();
-            
-            // Всегда выбираем лучший сервер
             selectBestServer();
-            
-            // Обновляем статус
             updateVPNStatus();
             renderVPNServers();
 
@@ -1713,11 +2044,10 @@
                 }
             });
 
-            // Автоматическое обновление серверов каждые 5 минут
+            // Авто-обновление серверов
             setInterval(async () => {
                 await fetchUSServers();
                 if (currentServer) {
-                    // Проверяем, есть ли сервер с меньшим пингом
                     const better = usServers.find(s => s.ping < currentServer.ping);
                     if (better) {
                         currentServer = better;
@@ -1726,13 +2056,18 @@
                         showToast(`🔄 Смена сервера: ${better.name}`);
                     }
                 }
-            }, 300000); // 5 минут
+            }, 300000);
 
-            console.log('🇺🇸 Бот с US VPN (Always On) запущен!');
-            console.log('🌐 Серверов в США:', usServers.length);
-            console.log('🔒 Текущий сервер:', currentServer?.name || 'Авто');
-            console.log('🔄 Авто-обновление: 3 сек');
-            console.log('🔄 Обновление серверов: 5 мин');
+            // Разрешение уведомлений
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            console.log('✅ Бот с US VPN запущен!');
+            console.log('🌐 Серверов:', usServers.length);
+            console.log('🔒 Сервер:', currentServer?.name || 'Авто');
+            console.log('🔔 Уведомления: Включены');
+            console.log('🗑 Удаление контактов: Доступно');
         });
     </script>
 </body>

@@ -498,6 +498,20 @@
             background: rgba(0,0,0,0.1);
         }
 
+        .message .media-loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* ========== ВВОД ========== */
         .input-area {
             padding: 8px 12px;
@@ -815,8 +829,30 @@
             animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            align-self: flex-start;
+            margin: 4px 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
         }
     </style>
 </head>
@@ -835,7 +871,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <button onclick="updateContacts()" title="Обновить">🔄</button>
+            <button onclick="forceUpdate()" title="Обновить">🔄</button>
             <button onclick="toggleTheme()" title="Тема">🌓</button>
         </div>
     </header>
@@ -889,7 +925,7 @@
                     <option value="photo">🖼 Фото</option>
                     <option value="video">🎥 Видео</option>
                     <option value="sticker">😊 Стикер</option>
-                    <option value="video_note">⭕ Кружок (Video Note)</option>
+                    <option value="video_note">⭕ Кружок</option>
                     <option value="document">📄 Документ</option>
                 </select>
             </div>
@@ -905,7 +941,7 @@
             <div class="media-preview" id="mediaPreview"></div>
 
             <div class="form-group" id="captionGroup">
-                <label>Подпись (опционально)</label>
+                <label>Подпись</label>
                 <textarea id="captionText" rows="2" placeholder="Введите подпись..."></textarea>
             </div>
 
@@ -947,6 +983,7 @@
         let updateInterval = null;
         let selectedFile = null;
         let chatAvatars = {};
+        let isUpdating = false;
 
         // ============================================================
         // 4. API ВЫЗОВЫ
@@ -964,78 +1001,80 @@
                 const data = await response.json();
                 if (!data.ok) {
                     console.error('Telegram API Error:', data);
-                    showToast(`❌ ${data.description || 'Ошибка'}`);
                 }
                 return data;
             } catch (error) {
                 console.error('Network Error:', error);
-                showToast('❌ Ошибка сети');
-                return { ok: false, error: error.message };
-            }
-        }
-
-        async function sendFileToTelegram(chatId, file, type, caption = '') {
-            const formData = new FormData();
-            formData.append('chat_id', chatId);
-            formData.append(type, file);
-            if (caption) formData.append('caption', caption);
-
-            const methodMap = {
-                'photo': 'sendPhoto',
-                'video': 'sendVideo',
-                'sticker': 'sendSticker',
-                'video_note': 'sendVideoNote',
-                'document': 'sendDocument'
-            };
-
-            const method = methodMap[type] || 'sendDocument';
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/${method}`;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (!data.ok) {
-                    showToast(`❌ ${data.description || 'Ошибка'}`);
-                }
-                return data;
-            } catch (error) {
-                showToast('❌ Ошибка отправки файла');
                 return { ok: false, error: error.message };
             }
         }
 
         // ============================================================
-        // 5. ПОЛУЧЕНИЕ ОБНОВЛЕНИЙ
+        // 5. ПОЛУЧЕНИЕ ФАЙЛОВ
+        // ============================================================
+        async function getFileUrl(fileId) {
+            try {
+                const result = await callTelegramAPI('getFile', { file_id: fileId });
+                if (result.ok && result.result?.file_path) {
+                    return `https://api.telegram.org/file/bot${BOT_TOKEN}/${result.result.file_path}`;
+                }
+                return null;
+            } catch (e) {
+                console.error('Get file error:', e);
+                return null;
+            }
+        }
+
+        // ============================================================
+        // 6. ПОЛУЧЕНИЕ ОБНОВЛЕНИЙ
         // ============================================================
         async function getUpdates() {
-            const params = {
-                timeout: 30,
-                allowed_updates: ['message', 'channel_post', 'my_chat_member']
-            };
+            if (isUpdating) return;
+            isUpdating = true;
 
-            if (lastUpdateId > 0) {
-                params.offset = lastUpdateId + 1;
-            }
+            try {
+                const params = {
+                    timeout: 30,
+                    allowed_updates: ['message', 'channel_post', 'my_chat_member']
+                };
 
-            const result = await callTelegramAPI('getUpdates', params);
-            
-            if (result.ok && result.result) {
-                for (const update of result.result) {
-                    lastUpdateId = Math.max(lastUpdateId, update.update_id);
+                if (lastUpdateId > 0) {
+                    params.offset = lastUpdateId + 1;
+                }
+
+                const result = await callTelegramAPI('getUpdates', params);
+                
+                if (result.ok && result.result) {
+                    let hasNewMessages = false;
                     
-                    const msg = update.message || update.channel_post;
-                    if (msg) {
-                        await processNewMessage(msg);
+                    for (const update of result.result) {
+                        lastUpdateId = Math.max(lastUpdateId, update.update_id);
+                        
+                        const msg = update.message || update.channel_post;
+                        if (msg) {
+                            await processNewMessage(msg);
+                            hasNewMessages = true;
+                        }
+                    }
+
+                    // Если есть новые сообщения, обновляем UI
+                    if (hasNewMessages) {
+                        renderChats();
+                        updateOnlineCount();
+                        if (currentChat) {
+                            renderMessages(currentChat.id);
+                        }
                     }
                 }
+            } catch (e) {
+                console.error('Get updates error:', e);
+            } finally {
+                isUpdating = false;
             }
         }
 
         // ============================================================
-        // 6. ОБРАБОТКА НОВЫХ СООБЩЕНИЙ
+        // 7. ОБРАБОТКА НОВЫХ СООБЩЕНИЙ
         // ============================================================
         async function processNewMessage(msg) {
             const chatId = String(msg.chat.id);
@@ -1050,7 +1089,7 @@
                 userName = msg.chat.title || msg.from?.first_name || 'Chat';
             }
 
-            // Получаем аватарку
+            // Загружаем аватарку
             if (msg.from?.id) {
                 try {
                     const photos = await callTelegramAPI('getUserProfilePhotos', { user_id: msg.from.id, limit: 1 });
@@ -1069,33 +1108,39 @@
             let text = msg.text || msg.caption || '';
             let mediaType = null;
             let mediaFileId = null;
+            let mediaUrl = null;
             let mediaContent = '';
 
             if (msg.sticker) {
                 mediaType = 'sticker';
                 mediaFileId = msg.sticker.file_id;
+                mediaUrl = await getFileUrl(mediaFileId);
                 mediaContent = '😊 Стикер';
-                text = msg.caption || '😊 Стикер';
+                text = msg.caption || '';
             } else if (msg.photo) {
                 mediaType = 'photo';
                 mediaFileId = msg.photo[msg.photo.length - 1].file_id;
+                mediaUrl = await getFileUrl(mediaFileId);
                 mediaContent = '🖼 Фото';
-                text = msg.caption || '🖼 Фото';
+                text = msg.caption || '';
             } else if (msg.video) {
                 mediaType = 'video';
                 mediaFileId = msg.video.file_id;
+                mediaUrl = await getFileUrl(mediaFileId);
                 mediaContent = '🎥 Видео';
-                text = msg.caption || '🎥 Видео';
+                text = msg.caption || '';
             } else if (msg.video_note) {
                 mediaType = 'video_note';
                 mediaFileId = msg.video_note.file_id;
+                mediaUrl = await getFileUrl(mediaFileId);
                 mediaContent = '⭕ Кружок';
-                text = '⭕ Кружок';
+                text = '';
             } else if (msg.document) {
                 mediaType = 'document';
                 mediaFileId = msg.document.file_id;
+                mediaUrl = await getFileUrl(mediaFileId);
                 mediaContent = '📄 Документ';
-                text = msg.caption || `📄 ${msg.document.file_name || 'Документ'}`;
+                text = msg.caption || msg.document.file_name || 'Документ';
             }
 
             // Добавляем в контакты
@@ -1107,7 +1152,7 @@
                 username: msg.from?.username || msg.chat?.username || '',
                 last: text || mediaContent || 'Сообщение',
                 time: new Date(msg.date * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
-                unread: 1,
+                unread: currentChat?.id !== chatId ? 1 : 0,
                 date: msg.date,
                 avatar: chatAvatars[String(msg.from?.id)] || null
             };
@@ -1116,7 +1161,9 @@
             if (existing) {
                 existing.last = contact.last;
                 existing.time = contact.time;
-                existing.unread = (existing.unread || 0) + 1;
+                if (currentChat?.id !== chatId) {
+                    existing.unread = (existing.unread || 0) + 1;
+                }
                 existing.date = contact.date;
                 if (contact.avatar) existing.avatar = contact.avatar;
             } else {
@@ -1138,31 +1185,28 @@
                 date: msg.date,
                 mediaType: mediaType,
                 mediaFileId: mediaFileId,
+                mediaUrl: mediaUrl,
                 mediaContent: mediaContent
             };
 
             const exists = messages[chatId].find(m => m.id === messageObj.id);
             if (!exists) {
                 messages[chatId].push(messageObj);
-                if (messages[chatId].length > 100) {
+                if (messages[chatId].length > 200) {
                     messages[chatId].shift();
                 }
             }
 
             saveData();
-            renderChats();
-            updateOnlineCount();
 
+            // Если чат открыт, обновляем сообщения
             if (currentChat && currentChat.id === chatId) {
                 renderMessages(chatId);
-            } else if (chatType === 'private') {
-                const preview = text.length > 50 ? text.slice(0, 50) + '...' : text;
-                showToast(`📩 ${userName}: ${preview}`);
             }
         }
 
         // ============================================================
-        // 7. СОХРАНЕНИЕ ДАННЫХ
+        // 8. СОХРАНЕНИЕ ДАННЫХ
         // ============================================================
         function saveData() {
             try {
@@ -1192,7 +1236,7 @@
         }
 
         // ============================================================
-        // 8. ОТОБРАЖЕНИЕ КОНТАКТОВ
+        // 9. ОТОБРАЖЕНИЕ КОНТАКТОВ
         // ============================================================
         function renderChats() {
             const list = document.getElementById('chatsList');
@@ -1223,7 +1267,7 @@
                         <div style="font-size:28px;margin-bottom:6px;">📭</div>
                         <div style="font-size:13px;">Нет контактов</div>
                         <div style="font-size:12px;margin-top:4px;">Кто-то напишет боту - появится здесь</div>
-                        <button onclick="updateContacts()" style="margin-top:8px;padding:6px 16px;border:none;border-radius:16px;background:var(--blue);color:white;cursor:pointer;font-size:13px;">🔄 Обновить</button>
+                        <button onclick="forceUpdate()" style="margin-top:8px;padding:6px 16px;border:none;border-radius:16px;background:var(--blue);color:white;cursor:pointer;font-size:13px;">🔄 Обновить</button>
                     </div>
                 `;
                 return;
@@ -1238,7 +1282,7 @@
                 return `
                     <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${chat.id}')">
                         <div class="chat-avatar ${chat.type === 'group' ? 'group' : chat.type === 'channel' ? 'channel' : ''}">
-                            ${avatar ? `<img src="${avatar}" alt="${chat.name}">` : 
+                            ${avatar ? `<img src="${avatar}" alt="${chat.name}" onerror="this.style.display='none'">` : 
                               (chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : typeEmoji)}
                         </div>
                         <div class="chat-info">
@@ -1266,7 +1310,7 @@
         }
 
         // ============================================================
-        // 9. ОТКРЫТЬ ЧАТ
+        // 10. ОТКРЫТЬ ЧАТ
         // ============================================================
         function openChat(chatId) {
             const chat = contacts.find(c => c.id === chatId);
@@ -1283,10 +1327,9 @@
             document.getElementById('chatTitle').textContent = chat.name;
             document.getElementById('chatSubtitle').textContent = typeMap[chat.type] || 'Чат';
             
-            // Аватар в шапке
             const headerAvatar = document.getElementById('headerAvatar');
             if (chat.avatar) {
-                headerAvatar.innerHTML = `<img src="${chat.avatar}" alt="${chat.name}">`;
+                headerAvatar.innerHTML = `<img src="${chat.avatar}" alt="${chat.name}" onerror="this.style.display='none'">`;
             } else {
                 headerAvatar.textContent = chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : 
                                           (chat.type === 'group' ? '👥' : '📢');
@@ -1328,7 +1371,7 @@
         }
 
         // ============================================================
-        // 10. СООБЩЕНИЯ
+        // 11. СООБЩЕНИЯ
         // ============================================================
         function renderMessages(chatId) {
             const container = document.getElementById('messagesContainer');
@@ -1351,24 +1394,24 @@
                 const senderName = msg.sender_name || 'User';
                 
                 let mediaHtml = '';
-                if (msg.mediaType) {
-                    const mediaUrl = msg.mediaFileId ? 
-                        `https://api.telegram.org/file/bot${BOT_TOKEN}/${msg.mediaFileId}` : '';
-                    
+                if (msg.mediaType && msg.mediaUrl) {
                     if (msg.mediaType === 'sticker') {
-                        mediaHtml = `<div class="media-content"><img src="${mediaUrl}" class="sticker" alt="Стикер"></div>`;
+                        mediaHtml = `<div class="media-content"><img src="${msg.mediaUrl}" class="sticker" alt="Стикер" loading="lazy" onerror="this.style.display='none'"></div>`;
                     } else if (msg.mediaType === 'photo') {
-                        mediaHtml = `<div class="media-content"><img src="${mediaUrl}" alt="Фото"></div>`;
+                        mediaHtml = `<div class="media-content"><img src="${msg.mediaUrl}" alt="Фото" loading="lazy" onerror="this.style.display='none'"></div>`;
                     } else if (msg.mediaType === 'video') {
-                        mediaHtml = `<div class="media-content"><video controls><source src="${mediaUrl}"></video></div>`;
+                        mediaHtml = `<div class="media-content"><video controls preload="metadata"><source src="${msg.mediaUrl}"></video></div>`;
                     } else if (msg.mediaType === 'video_note') {
-                        mediaHtml = `<div class="media-content"><video controls class="video-note" loop><source src="${mediaUrl}"></video></div>`;
+                        mediaHtml = `<div class="media-content"><video controls class="video-note" loop preload="metadata"><source src="${msg.mediaUrl}"></video></div>`;
                     } else if (msg.mediaType === 'document') {
-                        mediaHtml = `<div class="media-content"><a href="${mediaUrl}" target="_blank" class="media-file">📄 ${msg.text || 'Документ'}</a></div>`;
+                        mediaHtml = `<div class="media-content"><a href="${msg.mediaUrl}" target="_blank" class="media-file">📄 ${msg.text || 'Документ'}</a></div>`;
                     }
+                } else if (msg.mediaType && !msg.mediaUrl) {
+                    mediaHtml = `<div class="media-content"><div class="media-loading"></div><div style="font-size:12px;color:var(--text-secondary);">Загрузка медиа...</div></div>`;
                 }
                 
-                const textContent = msg.text && !msg.text.match(/^(😊 Стикер|🖼 Фото|🎥 Видео|⭕ Кружок|📄)/) ? 
+                const textContent = msg.text && msg.text.length > 0 && 
+                    !['😊 Стикер', '🖼 Фото', '🎥 Видео', '⭕ Кружок', '📄 Документ'].includes(msg.text) ? 
                     `<div class="media-caption">${msg.text}</div>` : '';
                 
                 return `
@@ -1387,13 +1430,16 @@
         function addMessage(chatId, msg) {
             if (!messages[chatId]) messages[chatId] = [];
             messages[chatId].push(msg);
+            if (messages[chatId].length > 200) {
+                messages[chatId].shift();
+            }
             if (currentChat && currentChat.id === chatId) {
                 renderMessages(chatId);
             }
         }
 
         // ============================================================
-        // 11. ОТПРАВКА СООБЩЕНИЙ
+        // 12. ОТПРАВКА СООБЩЕНИЙ
         // ============================================================
         function handleKey(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1456,7 +1502,7 @@
         }
 
         // ============================================================
-        // 12. ОТПРАВКА МЕДИА
+        // 13. ОТПРАВКА МЕДИА
         // ============================================================
         function openAttachModal() {
             if (!currentChat) {
@@ -1468,12 +1514,12 @@
             document.getElementById('mediaPreview').innerHTML = '';
             document.getElementById('captionText').value = '';
             selectedFile = null;
+            document.getElementById('fileInput').value = '';
             toggleAttachFields();
         }
 
         function toggleAttachFields() {
             const type = document.getElementById('attachType').value;
-            const isVideoNote = type === 'video_note';
             const captionGroup = document.getElementById('captionGroup');
             captionGroup.style.display = (type === 'sticker' || type === 'video_note') ? 'none' : 'block';
         }
@@ -1524,41 +1570,85 @@
                 time: new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
                 date: Date.now() / 1000,
                 mediaType: type,
-                mediaContent: 'Отправка...'
+                mediaContent: 'Отправка...',
+                mediaUrl: null
             };
 
             addMessage(currentChat.id, msg);
             closeModal('attachModal');
 
-            const result = await sendFileToTelegram(
-                currentChat.id,
-                selectedFile,
-                type,
-                caption
-            );
+            // Отправляем файл
+            const formData = new FormData();
+            formData.append('chat_id', currentChat.id);
+            
+            const methodMap = {
+                'photo': 'sendPhoto',
+                'video': 'sendVideo',
+                'sticker': 'sendSticker',
+                'video_note': 'sendVideoNote',
+                'document': 'sendDocument'
+            };
 
-            if (!result.ok) {
-                const msgs = messages[currentChat.id];
-                const idx = msgs.findIndex(m => m.id === msg.id);
-                if (idx !== -1) {
-                    msgs[idx].text = `❌ ${result.description || 'Ошибка отправки'}`;
-                    msgs[idx].sender = 'system';
-                }
-                renderMessages(currentChat.id);
-                showToast(`❌ ${result.description || 'Ошибка отправки'}`);
-            } else {
-                // Обновляем сообщение с реальными данными
-                const msgs = messages[currentChat.id];
-                const idx = msgs.findIndex(m => m.id === msg.id);
-                if (idx !== -1) {
-                    msgs[idx].mediaFileId = result.result[type]?.file_id || '';
-                    msgs[idx].mediaContent = type;
-                }
-                renderMessages(currentChat.id);
-                showToast('✅ Отправлено!');
+            const method = methodMap[type] || 'sendDocument';
+            const fieldName = type === 'video_note' ? 'video_note' : type;
+            formData.append(fieldName, selectedFile);
+            if (caption && type !== 'sticker' && type !== 'video_note') {
+                formData.append('caption', caption);
             }
 
-            // Обновляем контакт
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/${method}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (!result.ok) {
+                    const msgs = messages[currentChat.id];
+                    const idx = msgs.findIndex(m => m.id === msg.id);
+                    if (idx !== -1) {
+                        msgs[idx].text = `❌ ${result.description || 'Ошибка отправки'}`;
+                        msgs[idx].sender = 'system';
+                    }
+                    renderMessages(currentChat.id);
+                    showToast(`❌ ${result.description || 'Ошибка отправки'}`);
+                } else {
+                    // Получаем URL отправленного файла
+                    let fileId = null;
+                    if (result.result) {
+                        if (type === 'photo') {
+                            fileId = result.result.photo?.[result.result.photo.length - 1]?.file_id;
+                        } else if (type === 'sticker') {
+                            fileId = result.result.sticker?.file_id;
+                        } else if (type === 'video') {
+                            fileId = result.result.video?.file_id;
+                        } else if (type === 'video_note') {
+                            fileId = result.result.video_note?.file_id;
+                        } else if (type === 'document') {
+                            fileId = result.result.document?.file_id;
+                        }
+                    }
+
+                    if (fileId) {
+                        const fileUrl = await getFileUrl(fileId);
+                        const msgs = messages[currentChat.id];
+                        const idx = msgs.findIndex(m => m.id === msg.id);
+                        if (idx !== -1) {
+                            msgs[idx].mediaUrl = fileUrl;
+                            msgs[idx].mediaFileId = fileId;
+                            msgs[idx].mediaContent = type;
+                        }
+                        renderMessages(currentChat.id);
+                    }
+                    showToast('✅ Отправлено!');
+                }
+            } catch (error) {
+                showToast('❌ Ошибка отправки');
+                console.error('Send media error:', error);
+            }
+
             const contact = contacts.find(c => c.id === currentChat.id);
             if (contact) {
                 contact.last = caption || '📎 Медиа';
@@ -1573,13 +1663,16 @@
         }
 
         // ============================================================
-        // 13. ОБНОВЛЕНИЕ КОНТАКТОВ
+        // 14. ОБНОВЛЕНИЕ
         // ============================================================
-        async function updateContacts() {
+        async function forceUpdate() {
             showToast('🔄 Обновление...');
             await getUpdates();
             renderChats();
             updateOnlineCount();
+            if (currentChat) {
+                renderMessages(currentChat.id);
+            }
             showToast('✅ Обновлено');
         }
 
@@ -1589,7 +1682,7 @@
         }
 
         // ============================================================
-        // 14. ТОСТ
+        // 15. ТОСТ
         // ============================================================
         let toastTimeout = null;
 
@@ -1604,7 +1697,7 @@
         }
 
         // ============================================================
-        // 15. ТЕМА
+        // 16. ТЕМА
         // ============================================================
         function toggleTheme() {
             const html = document.documentElement;
@@ -1619,7 +1712,7 @@
         }
 
         // ============================================================
-        // 16. МОДАЛИ
+        // 17. МОДАЛИ
         // ============================================================
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
@@ -1632,19 +1725,23 @@
         });
 
         // ============================================================
-        // 17. АВТО-ОБНОВЛЕНИЕ
+        // 18. АВТО-ОБНОВЛЕНИЕ
         // ============================================================
         function startAutoUpdate() {
             if (updateInterval) clearInterval(updateInterval);
             updateInterval = setInterval(async () => {
                 await getUpdates();
+                // Обновляем UI только если есть изменения
                 renderChats();
                 updateOnlineCount();
-            }, 5000);
+                if (currentChat) {
+                    renderMessages(currentChat.id);
+                }
+            }, 3000); // Обновление каждые 3 секунды
         }
 
         // ============================================================
-        // 18. ТЕЛЕГРАМ ИНТЕГРАЦИЯ
+        // 19. ТЕЛЕГРАМ ИНТЕГРАЦИЯ
         // ============================================================
         if (tg) {
             const themeParams = tg.themeParams;
@@ -1656,7 +1753,7 @@
         }
 
         // ============================================================
-        // 19. ИНИЦИАЛИЗАЦИЯ
+        // 20. ИНИЦИАЛИЗАЦИЯ
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             loadData();
@@ -1672,10 +1769,16 @@
                 }
             }
 
+            // Запускаем авто-обновление
             startAutoUpdate();
+
+            // Первое обновление
             await getUpdates();
             renderChats();
             updateOnlineCount();
+            if (currentChat) {
+                renderMessages(currentChat.id);
+            }
 
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) {
@@ -1689,6 +1792,7 @@
         console.log('🤖 Токен:', BOT_TOKEN);
         console.log('💬 Контактов:', contacts.length);
         console.log('📨 Сообщений:', Object.keys(messages).length);
+        console.log('🔄 Авто-обновление: включено (3 сек)');
         console.log('🖼 Поддержка медиа: ✅');
     </script>
 </body>

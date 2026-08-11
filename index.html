@@ -23,7 +23,6 @@
             --green: #34c759;
             --red: #ff3b30;
             --orange: #ff9500;
-            --purple: #5856d6;
             --shadow: rgba(0, 0, 0, 0.1);
         }
 
@@ -47,7 +46,6 @@
             flex-direction: column;
         }
 
-        /* ========== ШАПКА ========== */
         .header {
             background: var(--bg-secondary);
             padding: 10px 16px;
@@ -144,27 +142,12 @@
             color: var(--text);
         }
 
-        .header-actions button:hover {
-            background: var(--border);
-        }
-
-        .badge-online {
-            background: var(--green);
-            color: white;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-left: 4px;
-        }
-
-        /* ========== ОСНОВНОЙ КОНТЕЙНЕР ========== */
         .main-container {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
 
-        /* ========== БОКОВАЯ ПАНЕЛЬ ========== */
         .sidebar {
             width: 320px;
             min-width: 280px;
@@ -224,10 +207,6 @@
             box-shadow: 0 1px 3px var(--shadow);
         }
 
-        .sidebar-tabs .tab:hover {
-            background: var(--bg);
-        }
-
         .chats-list {
             flex: 1;
             overflow-y: auto;
@@ -282,24 +261,6 @@
             background: var(--orange);
         }
 
-        .chat-avatar .online-dot {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid var(--bg-secondary);
-        }
-
-        .chat-avatar .online-dot.online {
-            background: var(--green);
-        }
-
-        .chat-avatar .online-dot.offline {
-            background: #8e8e93;
-        }
-
         .chat-info {
             flex: 1;
             min-width: 0;
@@ -345,7 +306,6 @@
             50% { transform: scale(1.1); }
         }
 
-        /* ========== ОБЛАСТЬ ЧАТА ========== */
         .chat-area {
             flex: 1;
             display: flex;
@@ -370,17 +330,6 @@
             margin-bottom: 12px;
         }
 
-        .chat-area-empty h3 {
-            color: var(--text);
-            font-size: 18px;
-            margin-bottom: 4px;
-        }
-
-        .chat-area-empty p {
-            font-size: 14px;
-        }
-
-        /* ========== СООБЩЕНИЯ ========== */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -449,7 +398,7 @@
             border-radius: 20px;
         }
 
-        /* ========== МЕДИА СООБЩЕНИЯ ========== */
+        /* ========== МЕДИА ========== */
         .message .media-content {
             margin: 4px 0;
             border-radius: 8px;
@@ -492,24 +441,6 @@
             font-size: 13px;
             text-decoration: none;
             color: var(--text);
-        }
-
-        .message .media-file:hover {
-            background: rgba(0,0,0,0.1);
-        }
-
-        .message .media-loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border);
-            border-top-color: var(--blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         /* ========== ВВОД ========== */
@@ -576,11 +507,6 @@
             transform: scale(0.9);
         }
 
-        .input-area .send-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
         .input-area .attach-btn {
             background: none;
             border: none;
@@ -589,11 +515,6 @@
             color: var(--text-secondary);
             padding: 4px;
             flex-shrink: 0;
-            transition: transform 0.2s;
-        }
-
-        .input-area .attach-btn:hover {
-            transform: scale(1.1);
         }
 
         /* ========== МОДАЛ ========== */
@@ -667,17 +588,6 @@
             font-family: inherit;
         }
 
-        .modal .form-group input:focus,
-        .modal .form-group select:focus,
-        .modal .form-group textarea:focus {
-            border-color: var(--blue);
-        }
-
-        .modal .form-group textarea {
-            resize: vertical;
-            min-height: 50px;
-        }
-
         .modal .form-group .file-input {
             padding: 10px;
             border: 2px dashed var(--border);
@@ -718,15 +628,6 @@
             margin-top: 6px;
         }
 
-        .modal .btn-modal:active {
-            transform: scale(0.97);
-        }
-
-        .modal .btn-modal:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .modal .media-preview {
             margin: 10px 0;
             text-align: center;
@@ -739,62 +640,6 @@
             border-radius: 8px;
         }
 
-        /* ========== АДАПТИВ ========== */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                min-width: unset;
-                border-right: none;
-            }
-
-            .sidebar.hidden {
-                display: none;
-            }
-
-            .chat-area {
-                width: 100%;
-            }
-
-            .message {
-                max-width: 85%;
-            }
-
-            .header .title {
-                font-size: 15px;
-            }
-
-            .message .media-content .sticker {
-                max-width: 96px;
-                max-height: 96px;
-            }
-
-            .message .media-content .video-note {
-                width: 100px;
-                height: 100px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .sidebar {
-                display: flex !important;
-            }
-        }
-
-        /* ========== SCROLLBAR ========== */
-        ::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
-        }
-
-        /* ========== ТОСТ ========== */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -818,47 +663,51 @@
             opacity: 1;
         }
 
-        /* ========== ЗАГРУЗКА ========== */
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--border);
-            border-top-color: var(--blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                border-right: none;
+            }
+            .sidebar.hidden {
+                display: none;
+            }
+            .chat-area {
+                width: 100%;
+            }
+            .message {
+                max-width: 85%;
+            }
+            .message .media-content .sticker {
+                max-width: 96px;
+                max-height: 96px;
+            }
+            .message .media-content .video-note {
+                width: 100px;
+                height: 100px;
+            }
         }
 
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 8px 12px;
-            background: var(--bg-secondary);
-            border-radius: 14px;
-            align-self: flex-start;
-            margin: 4px 0;
+        @media (min-width: 769px) {
+            .sidebar {
+                display: flex !important;
+            }
         }
 
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            background: var(--text-secondary);
-            border-radius: 50%;
-            animation: typingBounce 1.4s infinite;
+        ::-webkit-scrollbar {
+            width: 3px;
         }
-
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
 
-    <!-- ========== ШАПКА ========== -->
     <header class="header">
         <div class="header-left">
             <button class="back-btn" id="backBtn" onclick="showChatList()">‹</button>
@@ -871,15 +720,12 @@
             </div>
         </div>
         <div class="header-actions">
-            <button onclick="forceUpdate()" title="Обновить">🔄</button>
-            <button onclick="toggleTheme()" title="Тема">🌓</button>
+            <button onclick="forceUpdate()">🔄</button>
+            <button onclick="toggleTheme()">🌓</button>
         </div>
     </header>
 
-    <!-- ========== ОСНОВНОЙ КОНТЕЙНЕР ========== -->
     <div class="main-container">
-
-        <!-- ====== БОКОВАЯ ПАНЕЛЬ ====== -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-search">
                 <input type="text" id="searchInput" placeholder="🔍 Поиск..." oninput="filterChats()">
@@ -893,7 +739,6 @@
             <div class="chats-list" id="chatsList"></div>
         </div>
 
-        <!-- ====== ОБЛАСТЬ ЧАТА ====== -->
         <div class="chat-area" id="chatArea">
             <div class="chat-area-empty" id="emptyState">
                 <div class="empty-icon">💬</div>
@@ -905,20 +750,18 @@
                 <button class="attach-btn" onclick="openAttachModal()">📎</button>
                 <div class="input-wrapper">
                     <textarea id="messageInput" rows="1" placeholder="Напишите сообщение..." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+                    <button class="send-btn" onclick="sendMessage()">➤</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ========== ТОСТ ========== -->
     <div class="toast" id="toast"></div>
 
     <!-- ========== МОДАЛ ВЛОЖЕНИЙ ========== -->
     <div class="modal-overlay" id="attachModal">
         <div class="modal">
             <h3>📎 Отправить медиа</h3>
-            
             <div class="form-group">
                 <label>Тип</label>
                 <select id="attachType" onchange="toggleAttachFields()">
@@ -929,7 +772,6 @@
                     <option value="document">📄 Документ</option>
                 </select>
             </div>
-
             <div class="form-group">
                 <label>Файл</label>
                 <div class="file-input" onclick="document.getElementById('fileInput').click()">
@@ -937,17 +779,13 @@
                     <input type="file" id="fileInput" accept="image/*,video/*" onchange="previewFile(this)">
                 </div>
             </div>
-
             <div class="media-preview" id="mediaPreview"></div>
-
             <div class="form-group" id="captionGroup">
                 <label>Подпись</label>
                 <textarea id="captionText" rows="2" placeholder="Введите подпись..."></textarea>
             </div>
-
             <button class="btn-modal primary" onclick="sendMedia()">📤 Отправить</button>
             <button class="btn-modal secondary" onclick="closeModal('attachModal')">Отмена</button>
-            <div id="attachResult" style="margin-top:8px;font-size:13px;text-align:center;"></div>
         </div>
     </div>
 
@@ -966,7 +804,6 @@
             tg.ready();
         }
 
-        // Тема
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -982,106 +819,60 @@
         let lastUpdateId = 0;
         let updateInterval = null;
         let selectedFile = null;
-        let chatAvatars = {};
-        let isUpdating = false;
 
         // ============================================================
         // 4. API ВЫЗОВЫ
         // ============================================================
         async function callTelegramAPI(method, params = {}) {
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/${method}`;
-            
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
                 });
-                
-                const data = await response.json();
-                if (!data.ok) {
-                    console.error('Telegram API Error:', data);
-                }
-                return data;
+                return await response.json();
             } catch (error) {
-                console.error('Network Error:', error);
-                return { ok: false, error: error.message };
+                console.error('API Error:', error);
+                return { ok: false };
             }
         }
 
         // ============================================================
-        // 5. ПОЛУЧЕНИЕ ФАЙЛОВ
-        // ============================================================
-        async function getFileUrl(fileId) {
-            try {
-                const result = await callTelegramAPI('getFile', { file_id: fileId });
-                if (result.ok && result.result?.file_path) {
-                    return `https://api.telegram.org/file/bot${BOT_TOKEN}/${result.result.file_path}`;
-                }
-                return null;
-            } catch (e) {
-                console.error('Get file error:', e);
-                return null;
-            }
-        }
-
-        // ============================================================
-        // 6. ПОЛУЧЕНИЕ ОБНОВЛЕНИЙ
+        // 5. ПОЛУЧЕНИЕ ОБНОВЛЕНИЙ
         // ============================================================
         async function getUpdates() {
-            if (isUpdating) return;
-            isUpdating = true;
-
             try {
-                const params = {
-                    timeout: 30,
-                    allowed_updates: ['message', 'channel_post', 'my_chat_member']
-                };
-
-                if (lastUpdateId > 0) {
-                    params.offset = lastUpdateId + 1;
-                }
+                const params = { timeout: 30, allowed_updates: ['message', 'channel_post'] };
+                if (lastUpdateId > 0) params.offset = lastUpdateId + 1;
 
                 const result = await callTelegramAPI('getUpdates', params);
                 
                 if (result.ok && result.result) {
-                    let hasNewMessages = false;
-                    
                     for (const update of result.result) {
                         lastUpdateId = Math.max(lastUpdateId, update.update_id);
-                        
                         const msg = update.message || update.channel_post;
-                        if (msg) {
-                            await processNewMessage(msg);
-                            hasNewMessages = true;
-                        }
+                        if (msg) await processNewMessage(msg);
                     }
-
-                    // Если есть новые сообщения, обновляем UI
-                    if (hasNewMessages) {
+                    if (result.result.length > 0) {
                         renderChats();
                         updateOnlineCount();
-                        if (currentChat) {
-                            renderMessages(currentChat.id);
-                        }
+                        if (currentChat) renderMessages(currentChat.id);
                     }
                 }
             } catch (e) {
                 console.error('Get updates error:', e);
-            } finally {
-                isUpdating = false;
             }
         }
 
         // ============================================================
-        // 7. ОБРАБОТКА НОВЫХ СООБЩЕНИЙ
+        // 6. ОБРАБОТКА НОВЫХ СООБЩЕНИЙ
         // ============================================================
         async function processNewMessage(msg) {
             const chatId = String(msg.chat.id);
             const chatType = msg.chat.type;
+            
             let userName = '';
-
-            // Определяем имя
             if (chatType === 'private') {
                 userName = msg.from?.first_name || msg.from?.username || 'User';
                 if (msg.from?.last_name) userName += ' ' + msg.from.last_name;
@@ -1089,58 +880,31 @@
                 userName = msg.chat.title || msg.from?.first_name || 'Chat';
             }
 
-            // Загружаем аватарку
-            if (msg.from?.id) {
-                try {
-                    const photos = await callTelegramAPI('getUserProfilePhotos', { user_id: msg.from.id, limit: 1 });
-                    if (photos.ok && photos.result?.total_count > 0) {
-                        const fileId = photos.result.photos[0][0].file_id;
-                        const file = await callTelegramAPI('getFile', { file_id: fileId });
-                        if (file.ok) {
-                            const avatarUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${file.result.file_path}`;
-                            chatAvatars[String(msg.from.id)] = avatarUrl;
-                        }
-                    }
-                } catch (e) { console.error('Avatar error:', e); }
-            }
-
-            // Определяем текст и тип медиа
-            let text = msg.text || msg.caption || '';
+            // Определяем тип медиа
             let mediaType = null;
             let mediaFileId = null;
-            let mediaUrl = null;
-            let mediaContent = '';
+            let text = msg.text || msg.caption || '';
 
             if (msg.sticker) {
                 mediaType = 'sticker';
                 mediaFileId = msg.sticker.file_id;
-                mediaUrl = await getFileUrl(mediaFileId);
-                mediaContent = '😊 Стикер';
-                text = msg.caption || '';
+                text = '😊 Стикер';
             } else if (msg.photo) {
                 mediaType = 'photo';
                 mediaFileId = msg.photo[msg.photo.length - 1].file_id;
-                mediaUrl = await getFileUrl(mediaFileId);
-                mediaContent = '🖼 Фото';
-                text = msg.caption || '';
+                text = msg.caption || '🖼 Фото';
             } else if (msg.video) {
                 mediaType = 'video';
                 mediaFileId = msg.video.file_id;
-                mediaUrl = await getFileUrl(mediaFileId);
-                mediaContent = '🎥 Видео';
-                text = msg.caption || '';
+                text = msg.caption || '🎥 Видео';
             } else if (msg.video_note) {
                 mediaType = 'video_note';
                 mediaFileId = msg.video_note.file_id;
-                mediaUrl = await getFileUrl(mediaFileId);
-                mediaContent = '⭕ Кружок';
-                text = '';
+                text = '⭕ Кружок';
             } else if (msg.document) {
                 mediaType = 'document';
                 mediaFileId = msg.document.file_id;
-                mediaUrl = await getFileUrl(mediaFileId);
-                mediaContent = '📄 Документ';
-                text = msg.caption || msg.document.file_name || 'Документ';
+                text = msg.caption || `📄 ${msg.document.file_name || 'Документ'}`;
             }
 
             // Добавляем в контакты
@@ -1149,33 +913,26 @@
                 type: chatType === 'private' ? 'user' : 
                       (chatType === 'group' || chatType === 'supergroup') ? 'group' : 'channel',
                 name: userName,
-                username: msg.from?.username || msg.chat?.username || '',
-                last: text || mediaContent || 'Сообщение',
+                last: text || 'Сообщение',
                 time: new Date(msg.date * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
                 unread: currentChat?.id !== chatId ? 1 : 0,
-                date: msg.date,
-                avatar: chatAvatars[String(msg.from?.id)] || null
+                date: msg.date
             };
 
             const existing = contacts.find(c => c.id === contact.id);
             if (existing) {
                 existing.last = contact.last;
                 existing.time = contact.time;
-                if (currentChat?.id !== chatId) {
-                    existing.unread = (existing.unread || 0) + 1;
-                }
+                if (currentChat?.id !== chatId) existing.unread = (existing.unread || 0) + 1;
                 existing.date = contact.date;
-                if (contact.avatar) existing.avatar = contact.avatar;
             } else {
                 contacts.unshift(contact);
                 showToast(`🆕 Новый контакт: ${contact.name}`);
             }
 
             // Сохраняем сообщение
-            if (!messages[chatId]) {
-                messages[chatId] = [];
-            }
-
+            if (!messages[chatId]) messages[chatId] = [];
+            
             const messageObj = {
                 id: msg.message_id,
                 text: text,
@@ -1184,39 +941,28 @@
                 time: contact.time,
                 date: msg.date,
                 mediaType: mediaType,
-                mediaFileId: mediaFileId,
-                mediaUrl: mediaUrl,
-                mediaContent: mediaContent
+                mediaFileId: mediaFileId
             };
 
             const exists = messages[chatId].find(m => m.id === messageObj.id);
             if (!exists) {
                 messages[chatId].push(messageObj);
-                if (messages[chatId].length > 200) {
-                    messages[chatId].shift();
-                }
+                if (messages[chatId].length > 200) messages[chatId].shift();
             }
 
             saveData();
-
-            // Если чат открыт, обновляем сообщения
-            if (currentChat && currentChat.id === chatId) {
-                renderMessages(chatId);
-            }
+            if (currentChat && currentChat.id === chatId) renderMessages(chatId);
         }
 
         // ============================================================
-        // 8. СОХРАНЕНИЕ ДАННЫХ
+        // 7. СОХРАНЕНИЕ
         // ============================================================
         function saveData() {
             try {
                 localStorage.setItem('botContacts', JSON.stringify(contacts));
                 localStorage.setItem('botMessages', JSON.stringify(messages));
                 localStorage.setItem('botLastUpdate', String(lastUpdateId));
-                localStorage.setItem('botAvatars', JSON.stringify(chatAvatars));
-            } catch (e) {
-                console.error('Save error:', e);
-            }
+            } catch (e) { console.error('Save error:', e); }
         }
 
         function loadData() {
@@ -1224,34 +970,26 @@
                 const savedContacts = localStorage.getItem('botContacts');
                 const savedMessages = localStorage.getItem('botMessages');
                 const savedLastUpdate = localStorage.getItem('botLastUpdate');
-                const savedAvatars = localStorage.getItem('botAvatars');
-
                 if (savedContacts) contacts = JSON.parse(savedContacts);
                 if (savedMessages) messages = JSON.parse(savedMessages);
                 if (savedLastUpdate) lastUpdateId = parseInt(savedLastUpdate) || 0;
-                if (savedAvatars) chatAvatars = JSON.parse(savedAvatars);
-            } catch (e) {
-                console.error('Load error:', e);
-            }
+            } catch (e) { console.error('Load error:', e); }
         }
 
         // ============================================================
-        // 9. ОТОБРАЖЕНИЕ КОНТАКТОВ
+        // 8. ОТОБРАЖЕНИЕ
         // ============================================================
         function renderChats() {
             const list = document.getElementById('chatsList');
             const search = document.getElementById('searchInput').value.toLowerCase();
             
             let filtered = contacts;
-            
             if (currentTab !== 'all') {
                 filtered = contacts.filter(c => c.type === currentTab);
             }
-            
             if (search) {
                 filtered = filtered.filter(c => 
-                    c.name.toLowerCase().includes(search) || 
-                    c.id.includes(search)
+                    c.name.toLowerCase().includes(search) || c.id.includes(search)
                 );
             }
 
@@ -1266,8 +1004,7 @@
                     <div style="text-align:center;padding:30px 16px;color:var(--text-secondary);">
                         <div style="font-size:28px;margin-bottom:6px;">📭</div>
                         <div style="font-size:13px;">Нет контактов</div>
-                        <div style="font-size:12px;margin-top:4px;">Кто-то напишет боту - появится здесь</div>
-                        <button onclick="forceUpdate()" style="margin-top:8px;padding:6px 16px;border:none;border-radius:16px;background:var(--blue);color:white;cursor:pointer;font-size:13px;">🔄 Обновить</button>
+                        <button onclick="forceUpdate()" style="margin-top:8px;padding:6px 16px;border:none;border-radius:16px;background:var(--blue);color:white;cursor:pointer;">🔄 Обновить</button>
                     </div>
                 `;
                 return;
@@ -1277,13 +1014,11 @@
                 const isActive = currentChat && currentChat.id === chat.id;
                 const typeEmoji = chat.type === 'group' ? '👥' : chat.type === 'channel' ? '📢' : '';
                 const unread = chat.unread || 0;
-                const avatar = chat.avatar || '';
                 
                 return `
                     <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${chat.id}')">
                         <div class="chat-avatar ${chat.type === 'group' ? 'group' : chat.type === 'channel' ? 'channel' : ''}">
-                            ${avatar ? `<img src="${avatar}" alt="${chat.name}" onerror="this.style.display='none'">` : 
-                              (chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : typeEmoji)}
+                            ${chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : typeEmoji}
                         </div>
                         <div class="chat-info">
                             <div class="chat-name">${chat.name}</div>
@@ -1298,9 +1033,7 @@
             }).join('');
         }
 
-        function filterChats() {
-            renderChats();
-        }
+        function filterChats() { renderChats(); }
 
         function switchTab(tab, btn) {
             currentTab = tab;
@@ -1310,49 +1043,31 @@
         }
 
         // ============================================================
-        // 10. ОТКРЫТЬ ЧАТ
+        // 9. ОТКРЫТЬ ЧАТ
         // ============================================================
         function openChat(chatId) {
             const chat = contacts.find(c => c.id === chatId);
-            if (!chat) {
-                showToast('❌ Чат не найден');
-                return;
-            }
+            if (!chat) { showToast('❌ Чат не найден'); return; }
 
             currentChat = chat;
             chat.unread = 0;
 
-            // Обновляем шапку
-            const typeMap = { user: '👤 Личный', group: '👥 Группа', channel: '📢 Канал' };
             document.getElementById('chatTitle').textContent = chat.name;
+            const typeMap = { user: '👤 Личный', group: '👥 Группа', channel: '📢 Канал' };
             document.getElementById('chatSubtitle').textContent = typeMap[chat.type] || 'Чат';
             
             const headerAvatar = document.getElementById('headerAvatar');
-            if (chat.avatar) {
-                headerAvatar.innerHTML = `<img src="${chat.avatar}" alt="${chat.name}" onerror="this.style.display='none'">`;
-            } else {
-                headerAvatar.textContent = chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : 
-                                          (chat.type === 'group' ? '👥' : '📢');
-                headerAvatar.style.background = chat.type === 'group' ? 'var(--green)' : 
-                                               chat.type === 'channel' ? 'var(--orange)' : 'var(--blue)';
-            }
+            headerAvatar.textContent = chat.type === 'user' ? (chat.name ? chat.name[0].toUpperCase() : '?') : 
+                                      (chat.type === 'group' ? '👥' : '📢');
+            headerAvatar.style.background = chat.type === 'group' ? 'var(--green)' : 
+                                           chat.type === 'channel' ? 'var(--orange)' : 'var(--blue)';
 
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('messagesContainer').style.display = 'flex';
             document.getElementById('inputArea').style.display = 'flex';
 
-            document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.chat-item').forEach(el => {
-                if (el.textContent.includes(chat.name) || el.textContent.includes(chat.id)) {
-                    el.classList.add('active');
-                }
-            });
-
-            if (!messages[chatId]) {
-                messages[chatId] = [];
-            }
+            if (!messages[chatId]) messages[chatId] = [];
             renderMessages(chatId);
-
             saveData();
 
             if (window.innerWidth <= 768) {
@@ -1360,9 +1075,7 @@
                 document.getElementById('backBtn').classList.add('show');
             }
 
-            setTimeout(() => {
-                document.getElementById('messageInput').focus();
-            }, 300);
+            setTimeout(() => document.getElementById('messageInput').focus(), 300);
         }
 
         function showChatList() {
@@ -1371,18 +1084,14 @@
         }
 
         // ============================================================
-        // 11. СООБЩЕНИЯ
+        // 10. СООБЩЕНИЯ
         // ============================================================
         function renderMessages(chatId) {
             const container = document.getElementById('messagesContainer');
             const msgs = messages[chatId] || [];
 
             if (msgs.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center;padding:30px;color:var(--text-secondary);font-size:13px;">
-                        Нет сообщений
-                    </div>
-                `;
+                container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-secondary);font-size:13px;">Нет сообщений</div>`;
                 return;
             }
 
@@ -1393,25 +1102,27 @@
                 const isOutgoing = msg.sender === 'me';
                 const senderName = msg.sender_name || 'User';
                 
+                // Генерируем ссылку на медиа
                 let mediaHtml = '';
-                if (msg.mediaType && msg.mediaUrl) {
+                if (msg.mediaType && msg.mediaFileId) {
+                    // Прямая ссылка на файл через Telegram
+                    const mediaUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${msg.mediaFileId}`;
+                    // Но мы не можем получить file_path, поэтому используем другой подход
+                    // Для стикеров и фото используем прямой метод
                     if (msg.mediaType === 'sticker') {
-                        mediaHtml = `<div class="media-content"><img src="${msg.mediaUrl}" class="sticker" alt="Стикер" loading="lazy" onerror="this.style.display='none'"></div>`;
+                        mediaHtml = `<div class="media-content"><img src="https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${msg.mediaFileId}" class="sticker" alt="Стикер" onerror="this.alt='😊 Стикер';this.style.fontSize='32px';this.style.textAlign='center'"></div>`;
                     } else if (msg.mediaType === 'photo') {
-                        mediaHtml = `<div class="media-content"><img src="${msg.mediaUrl}" alt="Фото" loading="lazy" onerror="this.style.display='none'"></div>`;
+                        mediaHtml = `<div class="media-content"><img src="https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${msg.mediaFileId}" alt="Фото" onerror="this.alt='🖼 Фото';this.style.fontSize='32px';this.style.textAlign='center'"></div>`;
                     } else if (msg.mediaType === 'video') {
-                        mediaHtml = `<div class="media-content"><video controls preload="metadata"><source src="${msg.mediaUrl}"></video></div>`;
+                        mediaHtml = `<div class="media-content"><video controls preload="none" onerror="this.style.display='none'"><source src="https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${msg.mediaFileId}"></video></div>`;
                     } else if (msg.mediaType === 'video_note') {
-                        mediaHtml = `<div class="media-content"><video controls class="video-note" loop preload="metadata"><source src="${msg.mediaUrl}"></video></div>`;
+                        mediaHtml = `<div class="media-content"><video controls class="video-note" loop preload="none" onerror="this.style.display='none'"><source src="https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${msg.mediaFileId}"></video></div>`;
                     } else if (msg.mediaType === 'document') {
-                        mediaHtml = `<div class="media-content"><a href="${msg.mediaUrl}" target="_blank" class="media-file">📄 ${msg.text || 'Документ'}</a></div>`;
+                        mediaHtml = `<div class="media-content"><a href="https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${msg.mediaFileId}" target="_blank" class="media-file">📄 ${msg.text || 'Документ'}</a></div>`;
                     }
-                } else if (msg.mediaType && !msg.mediaUrl) {
-                    mediaHtml = `<div class="media-content"><div class="media-loading"></div><div style="font-size:12px;color:var(--text-secondary);">Загрузка медиа...</div></div>`;
                 }
                 
-                const textContent = msg.text && msg.text.length > 0 && 
-                    !['😊 Стикер', '🖼 Фото', '🎥 Видео', '⭕ Кружок', '📄 Документ'].includes(msg.text) ? 
+                const textContent = msg.text && !msg.text.match(/^(😊 Стикер|🖼 Фото|🎥 Видео|⭕ Кружок|📄)/) ? 
                     `<div class="media-caption">${msg.text}</div>` : '';
                 
                 return `
@@ -1427,19 +1138,8 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        function addMessage(chatId, msg) {
-            if (!messages[chatId]) messages[chatId] = [];
-            messages[chatId].push(msg);
-            if (messages[chatId].length > 200) {
-                messages[chatId].shift();
-            }
-            if (currentChat && currentChat.id === chatId) {
-                renderMessages(chatId);
-            }
-        }
-
         // ============================================================
-        // 12. ОТПРАВКА СООБЩЕНИЙ
+        // 11. ОТПРАВКА СООБЩЕНИЙ
         // ============================================================
         function handleKey(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1456,7 +1156,6 @@
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
-            
             if (!text || !currentChat) return;
 
             const msg = {
@@ -1467,7 +1166,9 @@
                 date: Date.now() / 1000
             };
             
-            addMessage(currentChat.id, msg);
+            if (!messages[currentChat.id]) messages[currentChat.id] = [];
+            messages[currentChat.id].push(msg);
+            renderMessages(currentChat.id);
             
             input.value = '';
             input.style.height = 'auto';
@@ -1481,13 +1182,11 @@
                 saveData();
             }
 
-            const params = {
+            const result = await callTelegramAPI('sendMessage', {
                 chat_id: currentChat.id,
                 text: text,
                 parse_mode: 'HTML'
-            };
-
-            const result = await callTelegramAPI('sendMessage', params);
+            });
 
             if (!result.ok) {
                 const msgs = messages[currentChat.id];
@@ -1502,13 +1201,10 @@
         }
 
         // ============================================================
-        // 13. ОТПРАВКА МЕДИА
+        // 12. ОТПРАВКА МЕДИА
         // ============================================================
         function openAttachModal() {
-            if (!currentChat) {
-                showToast('⚠️ Сначала выберите чат');
-                return;
-            }
+            if (!currentChat) { showToast('⚠️ Сначала выберите чат'); return; }
             document.getElementById('attachModal').classList.add('show');
             document.getElementById('filePreview').textContent = '📤 Нажмите для выбора файла';
             document.getElementById('mediaPreview').innerHTML = '';
@@ -1520,8 +1216,8 @@
 
         function toggleAttachFields() {
             const type = document.getElementById('attachType').value;
-            const captionGroup = document.getElementById('captionGroup');
-            captionGroup.style.display = (type === 'sticker' || type === 'video_note') ? 'none' : 'block';
+            document.getElementById('captionGroup').style.display = 
+                (type === 'sticker' || type === 'video_note') ? 'none' : 'block';
         }
 
         function previewFile(input) {
@@ -1530,9 +1226,7 @@
             
             selectedFile = file;
             const preview = document.getElementById('mediaPreview');
-            const previewText = document.getElementById('filePreview');
-            
-            previewText.textContent = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            document.getElementById('filePreview').textContent = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
             
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
@@ -1552,10 +1246,7 @@
         }
 
         async function sendMedia() {
-            if (!selectedFile || !currentChat) {
-                showToast('❌ Выберите файл');
-                return;
-            }
+            if (!selectedFile || !currentChat) { showToast('❌ Выберите файл'); return; }
 
             const type = document.getElementById('attachType').value;
             const caption = document.getElementById('captionText').value.trim();
@@ -1570,11 +1261,12 @@
                 time: new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }),
                 date: Date.now() / 1000,
                 mediaType: type,
-                mediaContent: 'Отправка...',
-                mediaUrl: null
+                mediaFileId: null
             };
 
-            addMessage(currentChat.id, msg);
+            if (!messages[currentChat.id]) messages[currentChat.id] = [];
+            messages[currentChat.id].push(msg);
+            renderMessages(currentChat.id);
             closeModal('attachModal');
 
             // Отправляем файл
@@ -1596,10 +1288,8 @@
                 formData.append('caption', caption);
             }
 
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/${method}`;
-
             try {
-                const response = await fetch(url, {
+                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1615,7 +1305,7 @@
                     renderMessages(currentChat.id);
                     showToast(`❌ ${result.description || 'Ошибка отправки'}`);
                 } else {
-                    // Получаем URL отправленного файла
+                    // Получаем file_id
                     let fileId = null;
                     if (result.result) {
                         if (type === 'photo') {
@@ -1632,13 +1322,10 @@
                     }
 
                     if (fileId) {
-                        const fileUrl = await getFileUrl(fileId);
                         const msgs = messages[currentChat.id];
                         const idx = msgs.findIndex(m => m.id === msg.id);
                         if (idx !== -1) {
-                            msgs[idx].mediaUrl = fileUrl;
                             msgs[idx].mediaFileId = fileId;
-                            msgs[idx].mediaContent = type;
                         }
                         renderMessages(currentChat.id);
                     }
@@ -1663,26 +1350,23 @@
         }
 
         // ============================================================
-        // 14. ОБНОВЛЕНИЕ
+        // 13. ОБНОВЛЕНИЕ
         // ============================================================
         async function forceUpdate() {
             showToast('🔄 Обновление...');
             await getUpdates();
             renderChats();
             updateOnlineCount();
-            if (currentChat) {
-                renderMessages(currentChat.id);
-            }
+            if (currentChat) renderMessages(currentChat.id);
             showToast('✅ Обновлено');
         }
 
         function updateOnlineCount() {
-            const count = contacts.filter(c => c.type === 'user').length;
-            document.getElementById('onlineCount').textContent = count;
+            document.getElementById('onlineCount').textContent = contacts.filter(c => c.type === 'user').length;
         }
 
         // ============================================================
-        // 15. ТОСТ
+        // 14. ТОСТ
         // ============================================================
         let toastTimeout = null;
 
@@ -1697,7 +1381,7 @@
         }
 
         // ============================================================
-        // 16. ТЕМА
+        // 15. ТЕМА
         // ============================================================
         function toggleTheme() {
             const html = document.documentElement;
@@ -1712,7 +1396,7 @@
         }
 
         // ============================================================
-        // 17. МОДАЛИ
+        // 16. МОДАЛИ
         // ============================================================
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
@@ -1725,35 +1409,20 @@
         });
 
         // ============================================================
-        // 18. АВТО-ОБНОВЛЕНИЕ
+        // 17. АВТО-ОБНОВЛЕНИЕ
         // ============================================================
         function startAutoUpdate() {
             if (updateInterval) clearInterval(updateInterval);
             updateInterval = setInterval(async () => {
                 await getUpdates();
-                // Обновляем UI только если есть изменения
                 renderChats();
                 updateOnlineCount();
-                if (currentChat) {
-                    renderMessages(currentChat.id);
-                }
-            }, 3000); // Обновление каждые 3 секунды
+                if (currentChat) renderMessages(currentChat.id);
+            }, 3000);
         }
 
         // ============================================================
-        // 19. ТЕЛЕГРАМ ИНТЕГРАЦИЯ
-        // ============================================================
-        if (tg) {
-            const themeParams = tg.themeParams;
-            if (themeParams) {
-                document.documentElement.style.setProperty('--bg', themeParams.bg_color || '#ffffff');
-                document.documentElement.style.setProperty('--text', themeParams.text_color || '#000000');
-                document.documentElement.style.setProperty('--blue', themeParams.button_color || '#007aff');
-            }
-        }
-
-        // ============================================================
-        // 20. ИНИЦИАЛИЗАЦИЯ
+        // 18. ИНИЦИАЛИЗАЦИЯ
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
             loadData();
@@ -1762,23 +1431,14 @@
 
             if (contacts.length > 0) {
                 const unreadChat = contacts.find(c => c.unread > 0);
-                if (unreadChat) {
-                    openChat(unreadChat.id);
-                } else {
-                    openChat(contacts[0].id);
-                }
+                openChat(unreadChat ? unreadChat.id : contacts[0].id);
             }
 
-            // Запускаем авто-обновление
             startAutoUpdate();
-
-            // Первое обновление
             await getUpdates();
             renderChats();
             updateOnlineCount();
-            if (currentChat) {
-                renderMessages(currentChat.id);
-            }
+            if (currentChat) renderMessages(currentChat.id);
 
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) {
@@ -1791,9 +1451,7 @@
         console.log('✅ Бот запущен!');
         console.log('🤖 Токен:', BOT_TOKEN);
         console.log('💬 Контактов:', contacts.length);
-        console.log('📨 Сообщений:', Object.keys(messages).length);
-        console.log('🔄 Авто-обновление: включено (3 сек)');
-        console.log('🖼 Поддержка медиа: ✅');
+        console.log('🔄 Авто-обновление: 3 сек');
     </script>
 </body>
 </html>

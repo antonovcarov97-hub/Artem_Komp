@@ -6,7 +6,7 @@
     <title>🤖 Бот + US VPN</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* ========== ВСЕ СТИЛИ (как в предыдущей версии) ========== */
+        /* ========== ВСЕ СТИЛИ ========== */
         * {
             margin: 0;
             padding: 0;
@@ -65,7 +65,6 @@
         .notification {
             background: var(--toast-bg);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             color: white;
             padding: 12px 16px;
             border-radius: 12px;
@@ -239,7 +238,7 @@
             background: var(--border);
         }
 
-        /* ========== ИНДИКАТОР ОБНОВЛЕНИЯ ========== */
+        /* ИНДИКАТОР ОБНОВЛЕНИЯ */
         .update-indicator {
             display: flex;
             align-items: center;
@@ -1026,7 +1025,7 @@
         // 1. КОНФИГУРАЦИЯ
         // ============================================================
         const BOT_TOKEN = "8953225877:AAFjsj8bJgMni7EkAM0L2w36xBBRR2tdDv8";
-        const UPDATE_INTERVAL = 1500; // 1.5 секунды - быстрое обновление
+        const UPDATE_INTERVAL = 2000; // 2 секунды
 
         // ============================================================
         // 2. US VPN СИСТЕМА
@@ -1283,27 +1282,28 @@
         let chatAvatars = {};
         let contactToDelete = null;
         let isUpdating = false;
+        let updateCounter = 0;
 
         // ============================================================
         // 5. ИНДИКАТОР ОБНОВЛЕНИЯ
         // ============================================================
-        function setUpdateStatus(status) {
+        function setUpdateStatus(status, text) {
             const dot = document.getElementById('updateDot');
-            const text = document.getElementById('updateText');
+            const txt = document.getElementById('updateText');
             
             if (status === 'loading') {
                 dot.className = 'update-dot';
-                text.textContent = 'Загрузка...';
+                txt.textContent = text || 'Загрузка...';
             } else if (status === 'updating') {
                 dot.className = 'update-dot';
-                text.textContent = 'Обновление...';
+                txt.textContent = text || 'Обновление...';
             } else if (status === 'new') {
                 dot.className = 'update-dot';
-                text.textContent = 'Новое!';
-                setTimeout(() => setUpdateStatus('idle'), 2000);
+                txt.textContent = '📨 Новое!';
+                setTimeout(() => setUpdateStatus('idle', 'Обновлено'), 2000);
             } else {
                 dot.className = 'update-dot idle';
-                text.textContent = 'Обновлено';
+                txt.textContent = text || 'Обновлено';
             }
         }
 
@@ -1582,12 +1582,16 @@
         }
 
         // ============================================================
-        // 11. АВТО-ОБНОВЛЕНИЕ (ГЛАВНАЯ ФУНКЦИЯ)
+        // 11. ГЛАВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ (РАБОТАЕТ В ФОНЕ)
         // ============================================================
         async function getUpdates() {
             if (isUpdating) return;
             isUpdating = true;
-            setUpdateStatus('updating');
+            
+            // Показываем что обновление идет (только если долго)
+            const loadingTimeout = setTimeout(() => {
+                setUpdateStatus('updating');
+            }, 500);
 
             try {
                 const params = { timeout: 30, allowed_updates: ['message', 'channel_post'] };
@@ -1605,6 +1609,7 @@
                             hasNew = true;
                         }
                     }
+                    
                     if (result.result.length > 0) {
                         renderChats();
                         updateOnlineCount();
@@ -1612,12 +1617,21 @@
                     }
                 }
                 
-                if (!hasNew) {
-                    setUpdateStatus('idle');
+                clearTimeout(loadingTimeout);
+                
+                // Обновляем индикатор
+                if (hasNew) {
+                    setUpdateStatus('new');
+                } else {
+                    setUpdateStatus('idle', `Обновлено ${updateCounter}`);
                 }
+                
+                updateCounter++;
+                
             } catch (e) {
                 console.error('Get updates error:', e);
-                setUpdateStatus('idle');
+                clearTimeout(loadingTimeout);
+                setUpdateStatus('idle', 'Ошибка');
             } finally {
                 isUpdating = false;
             }
@@ -1910,6 +1924,11 @@
                 }
                 renderMessages(currentChat.id);
                 showToast(`❌ ${lastError || 'Ошибка отправки'}`);
+            } else {
+                // Обновляем чат после отправки
+                setTimeout(() => {
+                    getUpdates();
+                }, 500);
             }
         }
 
@@ -2069,6 +2088,9 @@
                 showToast(`❌ ${lastError || 'Ошибка отправки'}`);
             } else {
                 showToast('✅ Отправлено!');
+                setTimeout(() => {
+                    getUpdates();
+                }, 500);
             }
 
             const contact = contacts.find(c => c.id === currentChat.id);
@@ -2094,7 +2116,7 @@
             renderChats();
             updateOnlineCount();
             if (currentChat) renderMessages(currentChat.id);
-            setUpdateStatus('idle');
+            setUpdateStatus('idle', 'Обновлено ✅');
             showToast('✅ Обновлено');
         }
 
@@ -2141,10 +2163,10 @@
             // Сразу проверяем
             getUpdates();
             
-            // Запускаем интервал
+            // Запускаем интервал - ОБНОВЛЯЕТСЯ КАЖДЫЕ 2 СЕКУНДЫ
             updateInterval = setInterval(async () => {
                 await getUpdates();
-                // Обновляем UI только если есть изменения
+                // Обновляем UI
                 renderChats();
                 updateOnlineCount();
                 if (currentChat) {
@@ -2152,13 +2174,29 @@
                 }
             }, UPDATE_INTERVAL);
             
-            console.log(`🔄 Авто-обновление запущено (${UPDATE_INTERVAL/1000} сек)`);
+            console.log(`🔄 АВТО-ОБНОВЛЕНИЕ ЗАПУЩЕНО (${UPDATE_INTERVAL/1000} сек)`);
         }
 
         // ============================================================
-        // 18. ИНИЦИАЛИЗАЦИЯ
+        // 18. ОТЛАДКА
+        // ============================================================
+        function debugStatus() {
+            console.log('=== СТАТУС БОТА ===');
+            console.log('Контактов:', contacts.length);
+            console.log('Сообщений в чатах:', Object.keys(messages).length);
+            console.log('Текущий чат:', currentChat?.name || 'Нет');
+            console.log('Последний update_id:', lastUpdateId);
+            console.log('Обновление активно:', !!updateInterval);
+            console.log('VPN сервер:', currentServer?.name || 'Нет');
+            console.log('===================');
+        }
+
+        // ============================================================
+        // 19. ИНИЦИАЛИЗАЦИЯ
         // ============================================================
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 ЗАПУСК БОТА...');
+            
             // Тема
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
@@ -2187,8 +2225,22 @@
                 openChat(unreadChat ? unreadChat.id : contacts[0].id);
             }
 
-            // ЗАПУСКАЕМ АВТО-ОБНОВЛЕНИЕ
+            // ЗАПУСКАЕМ АВТО-ОБНОВЛЕНИЕ (КАЖДЫЕ 2 СЕКУНДЫ)
             startAutoUpdate();
+
+            // Первое обновление
+            await getUpdates();
+            renderChats();
+            updateOnlineCount();
+            if (currentChat) renderMessages(currentChat.id);
+
+            // Отладка в консоль
+            debugStatus();
+            
+            // Обновляем статус каждые 10 секунд
+            setInterval(() => {
+                setUpdateStatus('idle', `Обновлено ${updateCounter}`);
+            }, 10000);
 
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) {
@@ -2197,7 +2249,7 @@
                 }
             });
 
-            // Авто-обновление серверов (каждые 5 минут)
+            // Авто-обновление серверов
             setInterval(async () => {
                 await fetchUSServers();
                 if (currentServer) {
@@ -2216,12 +2268,12 @@
                 Notification.requestPermission();
             }
 
-            console.log('✅ Бот с US VPN запущен!');
+            console.log('✅ БОТ ЗАПУЩЕН!');
             console.log(`🔄 Интервал обновления: ${UPDATE_INTERVAL/1000} сек`);
             console.log('🌐 Серверов:', usServers.length);
             console.log('🔒 Сервер:', currentServer?.name || 'Авто');
-            console.log('🔔 Уведомления: Включены');
-            console.log('🗑 Удаление контактов: Доступно');
+            console.log('💬 Контактов:', contacts.length);
+            console.log('📨 Сообщений:', Object.keys(messages).length);
         });
     </script>
 </body>
